@@ -1,0 +1,10 @@
+
+Component graphdraw
+{
+	Communications
+	{
+	};
+	language Cpp;
+	gui Qt(QWidget);
+};
+
