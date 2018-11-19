@@ -46,30 +46,51 @@ bool SpecificWorker::setParams(RoboCompCommonBehavior::ParameterList params)
 //	}
 //	catch(std::exception e) { qFatal("Error reading config params"); }
 
-
-
-
-	timer.start(Period);
-
-
 	return true;
+}
+
+void SpecificWorker::initialize(int period)
+{
+	std::cout << "Initialize worker" << std::endl;
+	this->Period = period;
+	timer.start(Period);
+	
+	scene.setSceneRect(0, 0, 5000, 5000);
+	view.setScene(&scene);
+	//view.scale(1, -1);
+	view.setParent(scrollArea);
+	view.setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+	view.fitInView(scene.sceneRect(), Qt::KeepAspectRatio );
+
+	qDebug() << __FILE__ << __FUNCTION__ <<  __cplusplus ;
+
+	//Crear el grafo
+	for(std::uint32_t i=0; i<10; i++)
+			graph.addNode(i); 
+	
+	QTime time = QTime::currentTime();
+	qsrand((uint)time.msec());
+	
+	for(std::uint32_t i=0; i<10; i++)
+	{
+		Graph::Attribs atts;
+		atts.insert(std::pair("posx", 10. + qrand() % ((4000 + 1) - 1) + 1 ));
+		atts.insert(std::pair("posy", 10. + qrand() % ((4000 + 1) - 1) + 1 ));
+		atts.insert(std::pair("color", "red"));
+		graph.addNodeAttribs(i, atts);
+	}
+	
+	// Pintarlo
+	for(auto &[key, value] : graph)
+	{
+			auto &[atts, neighs] = value;
+			std::cout << std::any_cast<double>(atts["posx"]) << " " << std::any_cast<double>(atts["posy"]) << std::endl;
+			scene.addEllipse(std::any_cast<double>(atts["posx"]), std::any_cast<double>(atts["posy"]), 200, 200, QPen(Qt::magenta), QBrush(Qt::magenta));
+	}
+	view.show();
 }
 
 void SpecificWorker::compute()
 {
-	QMutexLocker locker(mutex);
-	//computeCODE
-// 	try
-// 	{
-// 		camera_proxy->getYImage(0,img, cState, bState);
-// 		memcpy(image_gray.data, &img[0], m_width*m_height*sizeof(uchar));
-// 		searchTags(image_gray);
-// 	}
-// 	catch(const Ice::Exception &e)
-// 	{
-// 		std::cout << "Error reading from Camera" << e << std::endl;
-// 	}
+
 }
-
-
-
