@@ -36,6 +36,7 @@
 #include <any>
 #include <QGraphicsEllipseItem>
 #include <string>
+#include <cppitertools/range.hpp>
 
 class Graph 
 {
@@ -45,13 +46,13 @@ class Graph
 		using Value = std::tuple<Attribs, Neighs>;
 		using Nodes = std::unordered_map<std::uint32_t, Value>;
 		
-		typename Nodes::iterator begin() 																						{ return nodes.begin(); };
-		typename Nodes::iterator end() 																							{ return nodes.end();   };
-		typename Nodes::const_iterator begin() const  															{ return nodes.begin(); };
-		typename Nodes::const_iterator end() const 	 																{ return nodes.begin(); };
-		size_t size() const 																												{ return nodes.size();  };
-		void addNode(std::uint32_t id) 																							{ Value v; nodes.insert(std::pair(id, v));};
-		void addEdge(std::uint32_t from, std::uint32_t to) 													{ Attribs a; std::get<1>(nodes[from]).insert(std::pair(to,a));};
+		typename Nodes::iterator begin() 												{ return nodes.begin(); };
+		typename Nodes::iterator end() 													{ return nodes.end();   };
+		typename Nodes::const_iterator begin() const  									{ return nodes.begin(); };
+		typename Nodes::const_iterator end() const 	 									{ return nodes.begin(); };
+		size_t size() const 															{ return nodes.size();  };
+		void addNode(std::uint32_t id) 													{ Value v; nodes.insert(std::pair(id, v));};
+		void addEdge(std::uint32_t from, std::uint32_t to) 								{ Attribs a; std::get<1>(nodes[from]).insert(std::pair(to,a));};
 		void addNodeAttribs(std::uint32_t id, const Attribs &att) 									
 		{ 
 			for(auto &[k,v] : att)
@@ -63,6 +64,7 @@ class Graph
 				for(auto &[k,v] : att)
 					edgeAtts.insert(std::pair(k,v));
 		};
+		Value getNode(const std::uint32_t &id) const 									{ return nodes.at(id); };
 		
 	private:
 		Nodes nodes;
@@ -90,6 +92,8 @@ private:
 	QGraphicsEllipseItem *node;
 
 	Graph graph;
+	
+	void graph_forces(const Graph &);
 };
 
 #endif

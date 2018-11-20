@@ -57,40 +57,87 @@ void SpecificWorker::initialize(int period)
 	
 	scene.setSceneRect(0, 0, 5000, 5000);
 	view.setScene(&scene);
-	//view.scale(1, -1);
+	scrollArea->setWidgetResizable(true);
 	view.setParent(scrollArea);
-	view.setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+	scrollArea->setWidget(&view);
+	//view.setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
 	view.fitInView(scene.sceneRect(), Qt::KeepAspectRatio );
 
 	qDebug() << __FILE__ << __FUNCTION__ <<  __cplusplus ;
 
 	//Crear el grafo
-	for(std::uint32_t i=0; i<10; i++)
+	for(std::uint32_t i=0; i<100; i++)
 			graph.addNode(i); 
 	
-	QTime time = QTime::currentTime();
-	qsrand((uint)time.msec());
+	 srand (time(NULL));
 	
-	for(std::uint32_t i=0; i<10; i++)
+	for(std::uint32_t i=0; i<100; i++)
 	{
 		Graph::Attribs atts;
-		atts.insert(std::pair("posx", 10. + qrand() % ((4000 + 1) - 1) + 1 ));
-		atts.insert(std::pair("posy", 10. + qrand() % ((4000 + 1) - 1) + 1 ));
+		auto rd = QVec::uniformVector(2,0,4800);
+		atts.insert(std::pair("posx", rd[0]));
+		atts.insert(std::pair("posy", rd[1]));
 		atts.insert(std::pair("color", "red"));
 		graph.addNodeAttribs(i, atts);
 	}
 	
+	for (auto i : iter::range(100)) 
+	{
+		auto rd = QVec::uniformVector(2,0,100);
+		graph.addEdge((int)rd[0], (int)rd[1]);
+	}
+		
 	// Pintarlo
 	for(auto &[key, value] : graph)
 	{
 			auto &[atts, neighs] = value;
-			std::cout << std::any_cast<double>(atts["posx"]) << " " << std::any_cast<double>(atts["posy"]) << std::endl;
-			scene.addEllipse(std::any_cast<double>(atts["posx"]), std::any_cast<double>(atts["posy"]), 200, 200, QPen(Qt::magenta), QBrush(Qt::magenta));
+			
+			auto el = scene.addEllipse(std::any_cast<float>(atts["posx"])-200, std::any_cast<float>(atts["posy"])-200, 400, 400, QPen(QBrush(Qt::magenta),50),QBrush(Qt::white));
+			el->setZValue(1);
+			for( auto &[adj, adjatts] : neighs)
+			{
+				auto [destAtts, destNeighs] = graph.getNode(adj);
+				scene.addLine(std::any_cast<float>(atts["posx"]), std::any_cast<float>(atts["posy"]), 
+							  std::any_cast<float>(destAtts["posx"]), std::any_cast<float>(destAtts["posy"]), QPen(QBrush(Qt::blue),50));
+			}
 	}
-	view.show();
+	
+// 	for(auto &[key, node] : graph)
+// 	{
+// 		auto &neighs = node.neighboors();
+// 		auto &attribs = node.attributes();
+// 		
+// 		auto px = attribs.getPosX();
+// 		auto py = attribs.getPosY();
+// 		
+// 		auto el = scene.addEllipse(px-200, py-200, 400, 400, QPen(QBrush(Qt::magenta),50),QBrush(Qt::white));
+// 		el->setZValue(1);
+// 	}
+// 
+// 	for(auto &[from, to] : graph.edges())
+// 	{
+// 		auto &fromAttribs = from.attributes()["posx"];
+// 		auto &toAttribs = to.attributes();
+// 		
+// 		auto &fx = fromAttribs.getPosX();
+// 		auto &fy = fromAttribs.getPosY();
+// 		auto &tx = toAttribs.getPosX();
+// 		auto &ty = toAttribs.getPosY();
+// 		
+// 		scene.addLine(fx, fy, tx, ty, QPen(QBrush(Qt::blue),50));
+// 	}
+	
+ 	view.show();
 }
 
 void SpecificWorker::compute()
 {
 
+}
+
+//Computes repelling forces among nodes
+void SpecificWorker::graph_forces(const Graph &g)
+{
+	
+	
 }
