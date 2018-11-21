@@ -38,6 +38,9 @@
 #include <string>
 #include <cppitertools/range.hpp>
 
+#include "nabo/nabo.h"
+
+
 class Graph 
 {
 	public:

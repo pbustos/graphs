@@ -66,12 +66,13 @@ void SpecificWorker::initialize(int period)
 	qDebug() << __FILE__ << __FUNCTION__ <<  __cplusplus ;
 
 	//Crear el grafo
-	for(std::uint32_t i=0; i<100; i++)
+	const int nNodes = 10;
+	for(std::uint32_t i=0; i<nNodes; i++)
 			graph.addNode(i); 
 	
 	 srand (time(NULL));
 	
-	for(std::uint32_t i=0; i<100; i++)
+	for(std::uint32_t i=0; i<nNodes; i++)
 	{
 		Graph::Attribs atts;
 		auto rd = QVec::uniformVector(2,0,4800);
@@ -81,9 +82,9 @@ void SpecificWorker::initialize(int period)
 		graph.addNodeAttribs(i, atts);
 	}
 	
-	for (auto i : iter::range(100)) 
+	for (auto i : iter::range(nNodes)) 
 	{
-		auto rd = QVec::uniformVector(2,0,100);
+		auto rd = QVec::uniformVector(2,0,nNodes);
 		graph.addEdge((int)rd[0], (int)rd[1]);
 	}
 		
@@ -92,7 +93,7 @@ void SpecificWorker::initialize(int period)
 	{
 			auto &[atts, neighs] = value;
 			
-			auto el = scene.addEllipse(std::any_cast<float>(atts["posx"])-200, std::any_cast<float>(atts["posy"])-200, 400, 400, QPen(QBrush(Qt::magenta),50),QBrush(Qt::white));
+			auto el = scene.addEllipse(std::any_cast<float>(atts["posx"])-100, std::any_cast<float>(atts["posy"])-100, 200, 200, QPen(QBrush(Qt::magenta),30),QBrush(Qt::white));
 			el->setZValue(1);
 			for( auto &[adj, adjatts] : neighs)
 			{
@@ -101,6 +102,8 @@ void SpecificWorker::initialize(int period)
 							  std::any_cast<float>(destAtts["posx"]), std::any_cast<float>(destAtts["posy"]), QPen(QBrush(Qt::blue),50));
 			}
 	}
+	
+	graph_forces(graph);
 	
 // 	for(auto &[key, node] : graph)
 // 	{
@@ -138,6 +141,30 @@ void SpecificWorker::compute()
 //Computes repelling forces among nodes
 void SpecificWorker::graph_forces(const Graph &g)
 {
+	// points in 2D fron graph
+	Eigen::MatrixXf M = Eigen::MatrixXf(2, graph.size());
+	int i = 0;
+	for( auto &[key, value] : graph)
+	{
+		auto &[atts, neighs] = value; 
+		M(0,i) = std::any_cast<float>(atts["posx"]);
+		M(1,i) = std::any_cast<float>(atts["posy"]);
+		i++;
+	}
+	//std::cout << M << std::endl;
 	
+	// create a kd-tree for M, note that M must stay valid during the lifetime of the kd-tree
+	Nabo::NNSearchF* nns = Nabo::NNSearchF::createKDTreeLinearHeap(M);
+	
+	// query 5 closest points
+	const int K = 5;
+	Eigen::MatrixXi indices(K, M.cols());
+	Eigen::MatrixXf dists2(K, M.cols());
+	nns->knn(M, indices, dists2, K, 0, Nabo::NNSearchF::SORT_RESULTS );
+	
+	std::cout << indices << std::endl;
+	std::cout << dists2 << std::endl;
+	
+	delete nns;	
 	
 }
