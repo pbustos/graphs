@@ -53,8 +53,8 @@ void SpecificWorker::initialize(int period)
 {
 	std::cout << "Initialize worker" << std::endl;
 	this->Period = period;
-	timer.start(Period);
-	
+	timer.start(Period);  
+	setFixedSize(800,800);
 	scene.setSceneRect(0, 0, 5000, 5000);
 	view.setScene(&scene);
 	scrollArea->setWidgetResizable(true);
@@ -66,7 +66,7 @@ void SpecificWorker::initialize(int period)
 	qDebug() << __FILE__ << __FUNCTION__ <<  __cplusplus ;
 
 	//Crear el grafo
-	const int nNodes = 10;
+	const int nNodes = 100;
 	for(std::uint32_t i=0; i<nNodes; i++)
 			graph.addNode(i); 
 	
@@ -98,16 +98,16 @@ void SpecificWorker::initialize(int period)
 			atts["ellipse"] = el;
 			for( auto &[adj, adjatts] : neighs)
 			{
-				auto [destAtts, destNeighs] = graph.getNode(adj);
+				auto [destAtts, destNeighs] = graph.node(adj);
 				auto line = scene.addLine(std::any_cast<float>(atts["posx"]), std::any_cast<float>(atts["posy"]), 
-							  std::any_cast<float>(destAtts["posx"]), std::any_cast<float>(destAtts["posy"]), QPen(QBrush(Qt::blue),50));
+							  std::any_cast<float>(destAtts["posx"]), std::any_cast<float>(destAtts["posy"]), QPen(QBrush(Qt::blue),20));
 				adjatts["edgeline"] = line;
 			}
 	}
 	
 	graph_forces(graph);
  	view.show();
-	graph_forces(graph);
+	setPeriod(300);
 }
 
 void SpecificWorker::compute()
@@ -140,29 +140,49 @@ void SpecificWorker::graph_forces(Graph &g)
 	std::int32_t incx, incy;
 	for (auto i : iter::range(indices.cols()))
 	{
+        auto &node = graph.node(i);
+        auto &natts = graph.attrs(node);
 		incx=0; incy=0;
 		for (auto j : iter::range(indices.rows()))
 		{
+            //compute repulsive forces
 			incx += M(0,i) - M(0,indices(j,i));		
 			incy += M(1,i) - M(1,indices(j,i));
 			
+            //compute attractive forces from outgoing edges
+            for( auto &edges : graph.edges(node))
+            {
+                auto &[rnode, eatts] = edges;
+                auto &distatts = graph.attrs(graph.node(rnode));
+                incx += graph.attr<float>(distatts["posx"]) - graph.attr<float>(natts["posx"]);
+                incy += graph.attr<float>(distatts["posy"]) - graph.attr<float>(natts["posy"]);
+            }    
+            
 			//check threshold
 			if(incx > 10000) incx = 10000;
 			if(incy > 10000) incy = 10000;
-			
-			//check borders
+        }
+		float rx = std::any_cast<float>(natts["posx"]) + (incx/200.);
+		float ry = std::any_cast<float>(natts["posy"]) + (incy/200.);
+        
+        //check bounds
+        
+        
+		natts.insert_or_assign("posx", rx);
+		natts.insert_or_assign("posy", ry);
+		std::any_cast<QGraphicsEllipseItem *>(natts["ellipse"])->setRect(rx-100,ry-100,200,200);	
+        
+        auto &neighs = std::get<1>(graph.node(i));
+        for( auto &[adj, adjatts] : neighs)
+        {
+			auto &[destAtts, destNeighs] = graph.node(adj);
+			auto line = std::any_cast<QGraphicsLineItem *>(adjatts["edgeline"]);
+			line->setLine(std::any_cast<float>(natts["posx"]), std::any_cast<float>(natts["posy"]), 
+                         std::any_cast<float>(destAtts["posx"]), std::any_cast<float>(destAtts["posy"]));
 		}
-		//Move
-		auto &atts = std::get<0>(graph.getNode(i));
-		float rx = std::any_cast<float>(atts["posx"]) + (incx/100.);
-		float ry = std::any_cast<float>(atts["posy"]) + (incy/100.);
-		std::cout << rx << " " << ry << std::endl;
-		atts.insert_or_assign("posx", rx);
-		atts.insert_or_assign("posy", ry);
-		std::any_cast<QGraphicsEllipseItem *>(atts["ellipse"])->setRect(rx-100,ry-100,200,200);	
-	}
+    }
 	
-	std::cout << "NEW-----------------------" << std::endl;
+//	std::cout << "NEW-----------------------" << std::endl;
 // 	std::cout << indices << std::endl;
 // 	std::cout << "----------" << std::endl;
 // 	std::cout << dists2 << std::endl;

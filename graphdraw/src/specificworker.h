@@ -67,9 +67,17 @@ class Graph
 				for(auto &[k,v] : att)
 					edgeAtts.insert(std::pair(k,v));
 		};
-		Value getNode(const std::uint32_t &id) const 									{ return nodes.at(id); };
-		Value& getNode(const std::uint32_t &id)  	 									{ return nodes.at(id); };
-		
+        //helpers
+		Value node(std::uint32_t id) const 			{ return nodes.at(id); };
+		Value& node(std::uint32_t id)  	 			{ return nodes.at(id); };
+        Neighs edges(const Value &v) const          { return std::get<1>(v);};
+        Neighs& edges(Value &v)                     { return std::get<1>(v);};
+		Attribs attrs(const Value &v) const         { return std::get<0>(v);};
+        Attribs& attrs(Value &v)                    { return std::get<0>(v);};
+        template<typename T>
+            T attr(const std::any &s) const         { return std::any_cast<T>(s);};
+//         template<typename T>
+//             T& attr(std::any s)                     { return std::any_cast<T>(s);};
 		
 	private:
 		Nodes nodes;
