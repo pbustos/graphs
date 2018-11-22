@@ -95,16 +95,87 @@ void SpecificWorker::initialize(int period)
 			
 			auto el = scene.addEllipse(std::any_cast<float>(atts["posx"])-100, std::any_cast<float>(atts["posy"])-100, 200, 200, QPen(QBrush(Qt::magenta),30),QBrush(Qt::white));
 			el->setZValue(1);
+			atts["ellipse"] = el;
 			for( auto &[adj, adjatts] : neighs)
 			{
 				auto [destAtts, destNeighs] = graph.getNode(adj);
-				scene.addLine(std::any_cast<float>(atts["posx"]), std::any_cast<float>(atts["posy"]), 
+				auto line = scene.addLine(std::any_cast<float>(atts["posx"]), std::any_cast<float>(atts["posy"]), 
 							  std::any_cast<float>(destAtts["posx"]), std::any_cast<float>(destAtts["posy"]), QPen(QBrush(Qt::blue),50));
+				adjatts["edgeline"] = line;
 			}
 	}
 	
 	graph_forces(graph);
+ 	view.show();
+	graph_forces(graph);
+}
+
+void SpecificWorker::compute()
+{
+ 	graph_forces(graph);
+ 	view.show();
+}
 	
+//Computes repelling forces among nodes
+void SpecificWorker::graph_forces(Graph &g)
+{
+	// points in 2D fron graph
+	Eigen::MatrixXf M = Eigen::MatrixXf(2, graph.size());
+	for( auto &[key, value] : graph)
+	{
+		auto &[atts, neighs] = value; 
+		M(0,key) = std::any_cast<float>(atts["posx"]);
+		M(1,key) = std::any_cast<float>(atts["posy"]);
+	}
+	
+	// create a kd-tree for M, note that M must stay valid during the lifetime of the kd-tree
+	Nabo::NNSearchF* nns = Nabo::NNSearchF::createKDTreeLinearHeap(M);
+	
+	// query 5 closest points
+	const int K = 5;
+	Eigen::MatrixXi indices(K, M.cols());
+	Eigen::MatrixXf dists2(K, M.cols());
+	nns->knn(M, indices, dists2, K, 0, Nabo::NNSearchF::SORT_RESULTS );
+	
+	std::int32_t incx, incy;
+	for (auto i : iter::range(indices.cols()))
+	{
+		incx=0; incy=0;
+		for (auto j : iter::range(indices.rows()))
+		{
+			incx += M(0,i) - M(0,indices(j,i));		
+			incy += M(1,i) - M(1,indices(j,i));
+			
+			//check threshold
+			if(incx > 10000) incx = 10000;
+			if(incy > 10000) incy = 10000;
+			
+			//check borders
+		}
+		//Move
+		auto &atts = std::get<0>(graph.getNode(i));
+		float rx = std::any_cast<float>(atts["posx"]) + (incx/100.);
+		float ry = std::any_cast<float>(atts["posy"]) + (incy/100.);
+		std::cout << rx << " " << ry << std::endl;
+		atts.insert_or_assign("posx", rx);
+		atts.insert_or_assign("posy", ry);
+		std::any_cast<QGraphicsEllipseItem *>(atts["ellipse"])->setRect(rx-100,ry-100,200,200);	
+	}
+	
+	std::cout << "NEW-----------------------" << std::endl;
+// 	std::cout << indices << std::endl;
+// 	std::cout << "----------" << std::endl;
+// 	std::cout << dists2 << std::endl;
+// 	std::cout << "----------" << std::endl;
+// 	std::cout << M << std::endl;
+// 	std::cout << "----------" << std::endl;
+// 	
+	
+	
+	delete nns;	
+	
+}
+
 // 	for(auto &[key, node] : graph)
 // 	{
 // 		auto &neighs = node.neighboors();
@@ -129,42 +200,3 @@ void SpecificWorker::initialize(int period)
 // 		
 // 		scene.addLine(fx, fy, tx, ty, QPen(QBrush(Qt::blue),50));
 // 	}
-	
- 	view.show();
-}
-
-void SpecificWorker::compute()
-{
-
-}
-
-//Computes repelling forces among nodes
-void SpecificWorker::graph_forces(const Graph &g)
-{
-	// points in 2D fron graph
-	Eigen::MatrixXf M = Eigen::MatrixXf(2, graph.size());
-	int i = 0;
-	for( auto &[key, value] : graph)
-	{
-		auto &[atts, neighs] = value; 
-		M(0,i) = std::any_cast<float>(atts["posx"]);
-		M(1,i) = std::any_cast<float>(atts["posy"]);
-		i++;
-	}
-	//std::cout << M << std::endl;
-	
-	// create a kd-tree for M, note that M must stay valid during the lifetime of the kd-tree
-	Nabo::NNSearchF* nns = Nabo::NNSearchF::createKDTreeLinearHeap(M);
-	
-	// query 5 closest points
-	const int K = 5;
-	Eigen::MatrixXi indices(K, M.cols());
-	Eigen::MatrixXf dists2(K, M.cols());
-	nns->knn(M, indices, dists2, K, 0, Nabo::NNSearchF::SORT_RESULTS );
-	
-	std::cout << indices << std::endl;
-	std::cout << dists2 << std::endl;
-	
-	delete nns;	
-	
-}

@@ -68,6 +68,8 @@ class Graph
 					edgeAtts.insert(std::pair(k,v));
 		};
 		Value getNode(const std::uint32_t &id) const 									{ return nodes.at(id); };
+		Value& getNode(const std::uint32_t &id)  	 									{ return nodes.at(id); };
+		
 		
 	private:
 		Nodes nodes;
@@ -96,7 +98,7 @@ private:
 
 	Graph graph;
 	
-	void graph_forces(const Graph &);
+	void graph_forces(Graph &);
 };
 
 #endif
