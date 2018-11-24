@@ -97,7 +97,7 @@ void SpecificWorker::initialize(int period)
             auto *et = new QGraphicsSimpleTextItem(QString::number(key), el);
             //et->setTextWidth(200);
             et->setPen(QPen(Qt::black));
-            et->setItemSize(300,200);
+            //et->setItemSize(300,200);
             et->setBrush(QBrush(QPen(QColor::black)));
             scene.addItem(et);
             et->translate(std::any_cast<float>(atts["posx"])-100, std::any_cast<float>(atts["posy"])-100);
