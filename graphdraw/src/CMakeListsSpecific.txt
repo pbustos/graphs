@@ -3,15 +3,17 @@
 SET ( SOURCES
   specificworker.cpp
   specificmonitor.cpp
+  graphviewer.cpp
 )
 
 # Headers set
 SET ( HEADERS
   specificworker.h
   specificmonitor.h
+  graphviewer.h
 )
 
-ADD_DEFINITIONS( -std=c++11 )
+#ADD_DEFINITIONS( -std=c++11 )
 
 set(CMAKE_CXX_STANDARD 17)
 SET(SPECIFIC_LIBS -lnabo)
