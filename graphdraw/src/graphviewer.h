@@ -40,7 +40,8 @@ class GraphViewer : public QGraphicsView
 	public:
     void setGraph(std::shared_ptr<Graph> graph_,  QScrollArea *scrollArea);
 		void draw();
-		void graph_forces(Graph &g);
+		void applyForces(std::shared_ptr<Graph> g);
+		void applyForces2(std::shared_ptr<Graph> g);
 		
 	private:
 		std::shared_ptr<Graph> graph;
