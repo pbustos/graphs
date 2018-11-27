@@ -34,32 +34,35 @@ void GraphViewer::setGraph(std::shared_ptr<Graph> graph_, QScrollArea *scrollAre
 	
 	for(auto &[node_id, node_value] : *graph)
 		{
-				auto &[node_atts, node_fanout, node_fanin] = node_value;
-				float node_posx = std::any_cast<float>(node_atts["posx"]);
-				float node_posy = std::any_cast<float>(node_atts["posy"]);
+				auto &[node_atts, node_draw_attrs, node_fanout, node_fanin] = node_value;
+				float node_posx = std::any_cast<float>(node_draw_attrs["posx"]);
+				float node_posy = std::any_cast<float>(node_draw_attrs["posy"]);
+				std::cout << "gola" << std::endl;
 				//add circle
 				auto ellipse = scene.addEllipse(node_posx-200, node_posy-200, 400, 400, QPen(), QBrush(Qt::cyan));
 				ellipse->setZValue(1);
 				// node tag
-				QString qname = QString::fromStdString(std::any_cast<std::string>(node_atts["name"]));
+				QString qname = QString::fromStdString(std::any_cast<std::string>(node_draw_attrs["name"]));
+				std::cout << "gola1" << std::endl;
 				auto node_tag = new QGraphicsSimpleTextItem(QString::number(node_id) + " " + qname, ellipse);
 				node_tag->setX(node_posx-80);
 				node_tag->setY(node_posy-80);
 				node_tag->setScale(8);
-				node_atts["ellipse"] = ellipse;
-				node_atts["ellipse_text"] = node_tag;
+				node_draw_attrs["ellipse"] = ellipse;
+				node_draw_attrs["ellipse_text"] = node_tag;
 				for( auto &[node_adj, edge_atts] : node_fanout)
 				{
-					auto [node_dest_atts, node_dest_fanout, node_dest_fanin] = graph->node(node_adj);
+					auto [node_dest_atts, node_dest_draw_attrs, node_dest_fanout, node_dest_fanin] = graph->node(node_adj);
 					auto qline = QLine(node_posx, node_posy, 
-														std::any_cast<float>(node_dest_atts["posx"]), std::any_cast<float>(node_dest_atts["posy"]));
+										std::any_cast<float>(node_dest_draw_attrs["posx"]), std::any_cast<float>(node_dest_draw_attrs["posy"]));
+					std::cout << "gola3" << std::endl;
 					auto line = scene.addLine(qline, QPen(QBrush(Qt::blue), 10));
-					edge_atts["edge_line"] = line;
+					edge_atts.draw_attrs["edge_line"] = line;
 					// edge tags
 					auto edge_tag = new QGraphicsSimpleTextItem(QString::number(node_id) + "->" + QString::number(node_adj), line);
 					edge_tag->setX(qline.center().x());	edge_tag->setY(qline.center().y());
 					edge_tag->setScale(8);
-					edge_atts["edge_line_text"] = edge_tag;
+					edge_atts.draw_attrs["edge_line_text"] = edge_tag;
 				}
 		}
 }
@@ -77,9 +80,9 @@ void GraphViewer::applyForces(std::shared_ptr<Graph> g)
 	Eigen::MatrixXf M = Eigen::MatrixXf(2, graph->size());
 	for( auto &[key, value] : *graph)
 	{
-		auto &[atts, fanout, fanin] = value; 
-		M(0,key) = std::any_cast<float>(atts["posx"]);
-		M(1,key) = std::any_cast<float>(atts["posy"]);
+		auto &[attrs, draw_attrs, fanout, fanin] = value; 
+		M(0,key) = std::any_cast<float>(draw_attrs["posx"]);
+		M(1,key) = std::any_cast<float>(draw_attrs["posy"]);
 	}
 	
 	// create a kd-tree for M, note that M must stay valid during the lifetime of the kd-tree
@@ -96,50 +99,76 @@ void GraphViewer::applyForces(std::shared_ptr<Graph> g)
 	for (auto i : iter::range(indices.cols()))
 	{
         auto &node = graph->node(i);
-        auto &node_atts = graph->attrs(node);
-				rincx=0; rincy=0;
+        auto &node_draw_attrs = graph->drawAttrs(node);
+		rincx=0; rincy=0;
 		//compute repulsive forces
 		for (auto j : iter::range(indices.rows()))
 		{
-				rincx += ( M(0,i) - M(0,indices(j,i)));		
-				rincy += ( M(1,i) - M(1,indices(j,i)));
+			rincx += ( M(0,i) - M(0,indices(j,i)));		
+			rincy += ( M(1,i) - M(1,indices(j,i)));
 		}
 		//compute attractive forces from outgoing edges  
+		float px = graph->attr<float>(node_draw_attrs["posx"]);
+		float py = graph->attr<float>(node_draw_attrs["posy"]);
+		
 		aincx = 0; aincy = 0;
 		for( auto &edges : graph->fanout(node))
 		{
 			auto &[rnode, eatts] = edges;
-			auto &dist_atts = graph->attrs(graph->node(rnode));
-			aincx += (graph->attr<float>(dist_atts["posx"]) - graph->attr<float>(node_atts["posx"]));
-			aincy += (graph->attr<float>(dist_atts["posy"]) - graph->attr<float>(node_atts["posy"]));
+			auto &dist_draw_atts = graph->drawAttrs(graph->node(rnode));
+			aincx += graph->attr<float>(dist_draw_atts["posx"]) - px;
+			aincy += graph->attr<float>(dist_draw_atts["posy"])	- py;
 		}  
+	
+		// wall repulsion. compute distance from node to all walls using QLine2D
+		QLine2D top_wall(0, 0, scene.width(), 0);
+		QLine2D bottom_wall(0, scene.height(), scene.width(), scene.height());
+		QLine2D left_wall(0, 0, 0, scene.height());
+		QLine2D right_wall(scene.width(), 0, scene.width(), scene.height());
 		
+	/*	std::vector<QLine2D> distances_to_walls { top_wall, bottom_wall, left_wall, right_wall };
+		auto closest_wall = std::min_element( distances_to_walls.begin(), distances_to_walls.end(), 
+											  [px, py](const QLine2D &line)
+											  { line.perpendicularDistanceToPoint(QVec::vec2(px,py)); });
+	*/											
+		std::vector<float> distances_to_walls { top_wall.perpendicularDistanceToPoint(QVec::vec2(px,py)),
+												bottom_wall.perpendicularDistanceToPoint(QVec::vec2(px,py)),
+												left_wall.perpendicularDistanceToPoint(QVec::vec2(px,py)),
+												right_wall.perpendicularDistanceToPoint(QVec::vec2(px,py))};
+												
+	//	auto closest_wall = std::min_element(distances_to_walls.begin(), distances_to_walls.end());
+	//	T min_dist_to_wall = *closest_wall;
+								
+		
+		
+	
 		//weighted sum
 		float incx = 0.1*rincx + 0.3*aincx;
 		float incy = 0.1*rincy + 0.3*aincy;
+	
 		
-    //check threshold
-    if(incx > 10) incx = 10;
-		if(incx < -10) incx = -10;
-    if(incy > 10) incy = 10;
-		if(incy < -10) incy = -10;
+		//check threshold
+		if(incx > 10) incx = 10;
+			if(incx < -10) incx = -10;
+		if(incy > 10) incy = 10;
+			if(incy < -10) incy = -10;
+			
+		float rx = std::any_cast<float>(node_draw_attrs["posx"]) + incx;
+		float ry = std::any_cast<float>(node_draw_attrs["posy"]) + incy;
 		
-		float rx = std::any_cast<float>(node_atts["posx"]) + incx;
-		float ry = std::any_cast<float>(node_atts["posy"]) + incy;
-        
-    //check bounds
-		if( rx > this->width()) rx = this->width(); 
+		//check bounds
+		if( rx > scene.width()) rx = scene.width(); 
 		if( rx < 0) rx = 0;
-		if( ry > this->height()) ry = this->height(); 
+		if( ry > scene.height()) ry = scene.height(); 
 		if( ry < 0) ry = 0;
 		
 		//update node coors
-    node_atts.insert_or_assign("posx", rx);
-		node_atts.insert_or_assign("posy", ry);
+		node_draw_attrs.insert_or_assign("posx", rx);
+		node_draw_attrs.insert_or_assign("posy", ry);
 		
 		//move circle and text
-		auto ellipse_ptr = std::any_cast<QGraphicsEllipseItem *>(node_atts["ellipse"]);
-		auto text_ellipse_ptr = std::any_cast<QGraphicsSimpleTextItem *>(node_atts["ellipse_text"]);
+		auto ellipse_ptr = std::any_cast<QGraphicsEllipseItem *>(node_draw_attrs["ellipse"]);
+		auto text_ellipse_ptr = std::any_cast<QGraphicsSimpleTextItem *>(node_draw_attrs["ellipse_text"]);
 		ellipse_ptr->setRect(rx-100,ry-100,200,200);	
 		text_ellipse_ptr->setX(rx-80);
 		text_ellipse_ptr->setY(ry-80);
@@ -148,15 +177,16 @@ void GraphViewer::applyForces(std::shared_ptr<Graph> g)
 	//move line edges after finishing nodes
 	for(auto &[node_key, node_value] : *graph)
 	{
-		auto &[node_atts, node_fanout, node_fanin] = node_value;
+		auto &[node_atts, node_draw_attrs, node_fanout, node_fanin] = node_value;
 		for( auto &[node_dest, edge_atts] : node_fanout)
 		{
-			auto &node_dest_atts = graph->attrs(graph->node(node_dest));
-			auto line = std::any_cast<QGraphicsLineItem *>(edge_atts["edge_line"]);
-			QLine qline(std::any_cast<float>(node_atts["posx"]), std::any_cast<float>(node_atts["posy"]),	
-									std::any_cast<float>(node_dest_atts["posx"]), std::any_cast<float>(node_dest_atts["posy"]));
+			auto &node_dest_draw_attrs = graph->drawAttrs(graph->node(node_dest));
+			auto line = std::any_cast<QGraphicsLineItem *>(edge_atts.draw_attrs["edge_line"]);
+			QLine qline(std::any_cast<float>(node_draw_attrs["posx"]),
+						std::any_cast<float>(node_draw_attrs["posy"]),	std::any_cast<float>(node_dest_draw_attrs["posx"]),
+						std::any_cast<float>(node_dest_draw_attrs["posy"]));
 			line->setLine(qline);
-			auto line_text = std::any_cast<QGraphicsSimpleTextItem *>(edge_atts["edge_line_text"]);
+			auto line_text = std::any_cast<QGraphicsSimpleTextItem *>(edge_atts.draw_attrs["edge_line_text"]);
 			line_text->setX(qline.center().x()-80);
 			line_text->setY(qline.center().y()-80);
 		}

@@ -33,6 +33,7 @@
 #include <QGLViewer/qglviewer.h>
 #include <nabo/nabo.h>
 #include <cppitertools/range.hpp>
+#include <qmat/QMatAll>
 
 
 class GraphViewer : public QGraphicsView
@@ -46,7 +47,7 @@ class GraphViewer : public QGraphicsView
 	private:
 		std::shared_ptr<Graph> graph;
 		QGraphicsScene scene;
-	  QGraphicsEllipseItem *node;
+		QGraphicsEllipseItem *node;
 
 };
 

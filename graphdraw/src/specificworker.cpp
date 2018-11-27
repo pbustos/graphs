@@ -67,7 +67,7 @@ void SpecificWorker::walkTree(InnerModelNode *node)
 	atts.insert(std::pair("name", node->id.toStdString()));
 	atts.insert(std::pair("posx", rd[0]));
 	atts.insert(std::pair("posy", rd[1]));
-	graph->addNodeAttribs(node_id, atts);
+	graph->addNodeDrawAttribs(node_id, atts);
 	node_id++;
 
 	for(auto &it : node->children)	
@@ -95,7 +95,7 @@ void SpecificWorker::initializeRandom()
 		atts.insert(std::pair("posx", rd[0]));
 		atts.insert(std::pair("posy", rd[1]));
 		atts.insert(std::pair("color", "red"));
-		graph->addNodeAttribs(i, atts);
+		graph->addNodeDrawAttribs(i, atts);
 	}
 	
 	for (auto i : iter::range(nNodes)) 
@@ -111,6 +111,8 @@ void SpecificWorker::initialize(int period)
 	initializeFromInnerModel(innerModel);
 	graph_viewer.setGraph(graph, scrollArea);
 	graph_viewer.show();	
+	//graph_viewer.applyForces(graph);
+	
 	this->Period = 400;
 	timer.start(Period);  
 }
