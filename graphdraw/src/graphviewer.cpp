@@ -37,13 +37,11 @@ void GraphViewer::setGraph(std::shared_ptr<Graph> graph_, QScrollArea *scrollAre
 				auto &[node_atts, node_draw_attrs, node_fanout, node_fanin] = node_value;
 				float node_posx = std::any_cast<float>(node_draw_attrs["posx"]);
 				float node_posy = std::any_cast<float>(node_draw_attrs["posy"]);
-				std::cout << "gola" << std::endl;
 				//add circle
 				auto ellipse = scene.addEllipse(node_posx-200, node_posy-200, 400, 400, QPen(), QBrush(Qt::cyan));
 				ellipse->setZValue(1);
 				// node tag
 				QString qname = QString::fromStdString(std::any_cast<std::string>(node_draw_attrs["name"]));
-				std::cout << "gola1" << std::endl;
 				auto node_tag = new QGraphicsSimpleTextItem(QString::number(node_id) + " " + qname, ellipse);
 				node_tag->setX(node_posx-80);
 				node_tag->setY(node_posy-80);
@@ -55,7 +53,6 @@ void GraphViewer::setGraph(std::shared_ptr<Graph> graph_, QScrollArea *scrollAre
 					auto [node_dest_atts, node_dest_draw_attrs, node_dest_fanout, node_dest_fanin] = graph->node(node_adj);
 					auto qline = QLine(node_posx, node_posy, 
 										std::any_cast<float>(node_dest_draw_attrs["posx"]), std::any_cast<float>(node_dest_draw_attrs["posy"]));
-					std::cout << "gola3" << std::endl;
 					auto line = scene.addLine(qline, QPen(QBrush(Qt::blue), 10));
 					edge_atts.draw_attrs["edge_line"] = line;
 					// edge tags
@@ -126,41 +123,40 @@ void GraphViewer::applyForces(std::shared_ptr<Graph> g)
 		QLine2D left_wall(0, 0, 0, scene.height());
 		QLine2D right_wall(scene.width(), 0, scene.width(), scene.height());
 		
-	/*	std::vector<QLine2D> distances_to_walls { top_wall, bottom_wall, left_wall, right_wall };
+		QVec vpoint = QVec::vec2(px,py);
+		std::vector<QLine2D> distances_to_walls { top_wall, bottom_wall, left_wall, right_wall };
 		auto closest_wall = std::min_element( distances_to_walls.begin(), distances_to_walls.end(), 
-											  [px, py](const QLine2D &line)
-											  { line.perpendicularDistanceToPoint(QVec::vec2(px,py)); });
-	*/											
-		std::vector<float> distances_to_walls { top_wall.perpendicularDistanceToPoint(QVec::vec2(px,py)),
-												bottom_wall.perpendicularDistanceToPoint(QVec::vec2(px,py)),
-												left_wall.perpendicularDistanceToPoint(QVec::vec2(px,py)),
-												right_wall.perpendicularDistanceToPoint(QVec::vec2(px,py))};
+											  [vpoint](auto &lineA, auto &lineB) { return lineA.perpendicularDistanceToPoint(vpoint) 
+																				    < lineB.perpendicularDistanceToPoint(vpoint); });
+		QLine2D  perp = closest_wall->getPerpendicularLineThroughPoint(vpoint);
+		float dist = closest_wall->perpendicularDistanceToPoint(QVec::vec2(px,py));
+		float wincx = -perp.getDirectionVector().x() * dist;
+		float wincy = -perp.getDirectionVector().y() * dist;
+		wincx = std::max(std::min(wincx, (float)scene.width()), (float)200);
+		wincy = std::max(std::min(wincy, (float)scene.height()), (float)200);
 												
-	//	auto closest_wall = std::min_element(distances_to_walls.begin(), distances_to_walls.end());
-	//	T min_dist_to_wall = *closest_wall;
-								
-		
-		
-	
 		//weighted sum
-		float incx = 0.1*rincx + 0.3*aincx;
-		float incy = 0.1*rincy + 0.3*aincy;
-	
+		float incx = 0.1*rincx + 0.3*aincx + 0.3*wincx;
+		float incy = 0.1*rincy + 0.3*aincy + 0.3*wincy;
+		std::cout << incx << " " << incy << std::endl;
 		
 		//check threshold
-		if(incx > 10) incx = 10;
+		/*if(incx > 10) incx = 10;
 			if(incx < -10) incx = -10;
 		if(incy > 10) incy = 10;
 			if(incy < -10) incy = -10;
-			
+		*/
+		// ten percent
+		incx = incx / 100;
+		incy = incy / 100;
+		
 		float rx = std::any_cast<float>(node_draw_attrs["posx"]) + incx;
 		float ry = std::any_cast<float>(node_draw_attrs["posy"]) + incy;
 		
 		//check bounds
-		if( rx > scene.width()) rx = scene.width(); 
-		if( rx < 0) rx = 0;
-		if( ry > scene.height()) ry = scene.height(); 
-		if( ry < 0) ry = 0;
+		auto srect = scene.sceneRect();
+		rx = std::min(std::max(rx,(float)srect.left()+50),(float)srect.right()-50 );
+		ry = std::min(std::max(ry,(float)srect.top()+50),(float)srect.bottom()-50 );
 		
 		//update node coors
 		node_draw_attrs.insert_or_assign("posx", rx);

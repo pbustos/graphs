@@ -113,7 +113,7 @@ void SpecificWorker::initialize(int period)
 	graph_viewer.show();	
 	//graph_viewer.applyForces(graph);
 	
-	this->Period = 400;
+	this->Period = 100;
 	timer.start(Period);  
 }
 
