@@ -64,15 +64,26 @@ void SpecificWorker::walkTree(InnerModelNode *node)
 	auto node_parent = node_id;
 	Graph::Attribs atts;
 	auto rd = QVec::uniformVector(2,0,3000);
-	atts.insert(std::pair("name", node->id.toStdString()));
+	auto ids = node->id.toStdString();
+	atts.insert(std::pair("name", ids));
 	atts.insert(std::pair("posx", rd[0]));
 	atts.insert(std::pair("posy", rd[1]));
+	if(ids == "base")
+		atts.insert(std::pair("color", std::string{"coral"}));
+	if(ids == "laser")
+		atts.insert(std::pair("color", std::string{"darkgreen"}));
+	else
+		atts.insert(std::pair("color", std::string{"steelblue"}));
+		
 	graph->addNodeDrawAttribs(node_id, atts);
 	node_id++;
-
+	
 	for(auto &it : node->children)	
 	{	
 		graph->addEdge(node_parent, node_id);
+		graph->addEdgeDrawAttribs(node_parent, node_id, Graph::Attribs{std::pair("name", std::string{"parentOf"})});
+		graph->addEdge(node_id, node_parent);
+		graph->addEdgeDrawAttribs(node_id, node_parent, Graph::Attribs{std::pair("name", std::string{"childOf"})});
 		walkTree(it);
 	}
 }
@@ -84,17 +95,18 @@ void SpecificWorker::initializeRandom()
 	//Crear el grafo
 	const int nNodes = 10;
 	for(std::uint32_t i=0; i<nNodes; i++)
-			graph->addNode(i); 
+	
+		graph->addNode(i); 
 	
 	 srand (time(NULL));
 	
 	for(std::uint32_t i=0; i<nNodes; i++)
 	{
 		Graph::Attribs atts;
-		auto rd = QVec::uniformVector(2,0,3000);
+		auto rd = QVec::uniformVector(2,1000,1100);
 		atts.insert(std::pair("posx", rd[0]));
 		atts.insert(std::pair("posy", rd[1]));
-		atts.insert(std::pair("color", "red"));
+		atts.insert(std::pair("name", std::string("red")));
 		graph->addNodeDrawAttribs(i, atts);
 	}
 	
@@ -109,6 +121,8 @@ void SpecificWorker::initialize(int period)
 {
 	graph = std::make_shared<Graph>();
 	initializeFromInnerModel(innerModel);
+	//initializeRandom();
+	graph->print();
 	graph_viewer.setGraph(graph, scrollArea);
 	graph_viewer.show();	
 	//graph_viewer.applyForces(graph);

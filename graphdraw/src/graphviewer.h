@@ -43,12 +43,17 @@ class GraphViewer : public QGraphicsView
 		void draw();
 		void applyForces(std::shared_ptr<Graph> g);
 		void applyForces2(std::shared_ptr<Graph> g);
+	
+		void wheelEvent(QWheelEvent *event);
 		
 	private:
 		std::shared_ptr<Graph> graph;
 		QGraphicsScene scene;
 		QGraphicsEllipseItem *node;
-
+	
+		
+	public slots:
+	
 };
 
 #endif // GRAPHVIEWER_H

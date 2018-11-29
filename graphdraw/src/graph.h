@@ -17,6 +17,7 @@
 #ifndef GRAPH_H
 #define GRAPH_H
 
+#include <iostream>
 #include <unordered_map>
 #include <any>
 #include <memory>
@@ -71,6 +72,18 @@ class Graph
 				for(auto &[k,v] : att)
 					edgeAtts.draw_attrs.insert_or_assign(k,v);
 		};
+		void print()
+		{
+			std::cout << "---------------------------------" << std::endl;
+			for( auto &[k,v] : nodes)
+			{
+				std::cout << "[" << attr<std::string>(v.draw_attrs["name"]) << "] : ";
+				for( auto &[kf,vf] : v.fanout)
+					std::cout << attr<std::string>(vf.draw_attrs["name"]) << "( " << attr<std::string>(nodes[kf].draw_attrs["name"]) << " ); ";
+				std::cout << std::endl;
+			}
+			std::cout << "---------------------------------" << std::endl;
+		}
         //helpers
 		Value node(std::uint32_t id) const		{ return nodes.at(id); };
 		Value& node(std::uint32_t id)  	 		{ return nodes.at(id); };
