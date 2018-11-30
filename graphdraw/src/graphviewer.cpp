@@ -39,7 +39,7 @@ void GraphViewer::setGraph(std::shared_ptr<Graph> graph_, QScrollArea *scrollAre
 				float node_posy = std::any_cast<float>(node_draw_attrs["posy"]);
 				//add circle
 				std::string color_name = graph->attr<std::string>(node_draw_attrs["color"]);
-				auto ellipse = scene.addEllipse(node_posx-200, node_posy-200, 400, 400, QPen(), QBrush(QColor(color_name.c_str())));
+				auto ellipse = scene.addEllipse(node_posx-400, node_posy-200, 800, 400, QPen(), QBrush(QColor(color_name.c_str())));
 				ellipse->setZValue(1);
 				// node tag
 				QString qname = QString::fromStdString(std::any_cast<std::string>(node_draw_attrs["name"]));
@@ -172,8 +172,8 @@ void GraphViewer::applyForces(std::shared_ptr<Graph> g)
 		//move circle and text
 		auto ellipse_ptr = std::any_cast<QGraphicsEllipseItem *>(node_draw_attrs["ellipse"]);
 		auto text_ellipse_ptr = std::any_cast<QGraphicsSimpleTextItem *>(node_draw_attrs["ellipse_text"]);
-		ellipse_ptr->setRect(rx-100,ry-100,200,200);	
-		text_ellipse_ptr->setX(rx-80);
+		ellipse_ptr->setRect(rx-300,ry-100,600,200);	
+		text_ellipse_ptr->setX(rx-120);
 		text_ellipse_ptr->setY(ry-80);
 	}
 	
@@ -209,13 +209,21 @@ void GraphViewer::wheelEvent(QWheelEvent *event)
 	int angle = event->angleDelta().y();
 	qreal factor;
 	if (angle > 0) 
-			factor = 1.1;
-	else 
+	{
+		factor = 1.1;
+		scene.setSceneRect((qreal)factor*scene.sceneRect());
+	}
+	else
+	{
 		factor = 0.9;
+		scene.setSceneRect(*(qreal)factor*scene.sceneRect()*factor);
+	}
 	scale(factor, factor);
 	setTransformationAnchor(anchor);
 	
-	
+	qDebug() << "scene rect" << scene.sceneRect();
+	qDebug() << "view rect" << rect();
+
 }
 
 
