@@ -158,13 +158,23 @@ void SpecificWorker::initializeXML(std::string file_name)
 			graph->addNodeAttribs(node_id, Graph::Attribs{ std::pair("name", std::string((char *)stype))});
 			graph->addNodeAttribs(node_id, Graph::Attribs{ std::pair("type", std::string((char *)stype))});
 			Graph::Attribs atts;
+			std::string qname = (char *)stype;
+			std::string full_name = std::string((char *)stype) + " [" + std::string((char *)sid) + "]";
 			auto rd = QVec::uniformVector(2,-200,200);
-			atts.insert(std::pair("name", std::string((char *)stype)));
+			atts.insert(std::pair("name", full_name));
 			atts.insert(std::pair("posx", rd[0]));
 			atts.insert(std::pair("posy", rd[1]));
-			atts.insert(std::pair("color", std::string{"coral"}));
+			
+			// color selection
+			std::string color = "coral";
+			if(qname == "world") color = "SeaGreen";
+			else if(qname == "table") color = "SteelBlue";
+			else if(qname == "room") color = "Khaki";
+			else if(qname == "robot") color = "GoldenRod";
+			
+			atts.insert(std::pair("color", color));
 			graph->addNodeDrawAttribs(node_id, atts);
-			std::cout << node_id << " " <<  std::string((char *)stype) << std::endl;
+			//std::cout << node_id << " " <<  std::string((char *)stype) << std::endl;
 			
 			xmlFree(sid);
 			xmlFree(stype);
@@ -178,7 +188,6 @@ void SpecificWorker::initializeXML(std::string file_name)
 					
 					//s->setAttribute(std::string((char *)attr_key), std::string((char *)attr_value));
 					graph->addNodeAttribs(node_id, Graph::Attribs{ std::pair(std::string((char *)attr_key), std::string((char *)attr_value))});
-					
 					
 					xmlFree(attr_key);
 					xmlFree(attr_value);
@@ -229,7 +238,7 @@ void SpecificWorker::initializeXML(std::string file_name)
 				else if (xmlStrcmp(cur2->name, (const xmlChar *)"text") == 0) { }     // we'll ignore 'text'
 				else { printf("unexpected tag inside symbol: %s ==> %s\n", cur2->name,xmlGetProp(cur2, (const xmlChar *)"id") ); exit(-1); } // unexpected tags make the program exit
 			}
-			//qDebug() << a << b;
+			
 			graph->addEdge(a, b);
  			graph->addEdgeAttribs(a, b, Graph::Attribs{std::pair("name", edgeName)});
 			graph->addEdgeDrawAttribs(a, b, Graph::Attribs{std::pair("name", edgeName)});

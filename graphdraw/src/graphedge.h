@@ -19,12 +19,13 @@
 
 #include <QGraphicsItem>
 
+
 class GraphNode;
 
 class GraphEdge : public QGraphicsItem
 {
 	public:
-    GraphEdge(GraphNode *sourceNode, GraphNode *destNode);
+    GraphEdge(GraphNode *sourceNode, GraphNode *destNode, const QString &edge_name);
     GraphNode *sourceNode() const;
     GraphNode *destNode() const;
     void adjust();
@@ -40,6 +41,7 @@ class GraphEdge : public QGraphicsItem
     qreal arrowSize;
     QPointF sourcePoint;
     QPointF destPoint;
+		QGraphicsSimpleTextItem *tag;
 };
 
 #endif // GRAPHEDGE_H

@@ -21,6 +21,7 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 #include <QStyleOption>
+#include <QDebug>
 
 GraphNode::GraphNode(GraphViewer *graph_viewer) : graph(graph_viewer)
 {
@@ -34,6 +35,14 @@ void GraphNode::setTag(const QString &tag_)
 {
 	tag = new QGraphicsSimpleTextItem(tag_, this);
 	//tag->setScale(8);
+	tag->setX(20);	
+	tag->setY(-10);
+}
+
+void GraphNode::setColor(const QString &plain)
+{
+	plain_color = plain;
+	dark_color = "dark" + plain;
 }
 
 void GraphNode::addEdge(GraphEdge *edge)
@@ -126,17 +135,18 @@ void GraphNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     painter->drawEllipse(-7, -7, 20, 20);
 
     QRadialGradient gradient(-3, -3, 10);
-    if (option->state & QStyle::State_Sunken) {
+    if (option->state & QStyle::State_Sunken) 
+		{
         gradient.setCenter(3, 3);
         gradient.setFocalPoint(3, 3);
-        gradient.setColorAt(1, QColor(Qt::yellow).light(120));
-        gradient.setColorAt(0, QColor(Qt::darkYellow).light(120));
-    } else {
-        gradient.setColorAt(0, Qt::yellow);
-        gradient.setColorAt(1, Qt::darkYellow);
+        gradient.setColorAt(1, QColor(Qt::lightGray).light(120));
+        gradient.setColorAt(0, QColor(Qt::gray).light(120));
+    } else 
+		{
+        gradient.setColorAt(0, QColor(plain_color));
+        gradient.setColorAt(1, QColor(dark_color));
     }
     painter->setBrush(gradient);
-
     painter->setPen(QPen(Qt::black, 0));
     painter->drawEllipse(-10, -10, 20, 20);
 }

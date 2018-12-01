@@ -18,15 +18,18 @@
 #include "graphnode.h"
 #include <qmath.h>
 #include <QPainter>
+#include <QDebug>
 
-GraphEdge::GraphEdge(GraphNode *sourceNode, GraphNode *destNode) : arrowSize(10)
+GraphEdge::GraphEdge(GraphNode *sourceNode, GraphNode *destNode, const QString &edge_name) : arrowSize(10)
 {
     setAcceptedMouseButtons(0);
     source = sourceNode;
     dest = destNode;
     source->addEdge(this);
     dest->addEdge(this);
-    adjust();
+		tag = new QGraphicsSimpleTextItem(edge_name, this);
+		tag->setBrush(QBrush(QColor("coral")));
+		adjust();
 }
 
 GraphNode *GraphEdge::sourceNode() const
@@ -81,25 +84,39 @@ void GraphEdge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidg
 
     QLineF line(sourcePoint, destPoint);
     if (qFuzzyCompare(line.length(), qreal(0.)))
-        return;
+		{
+				// Draw the line itself
+				painter->setPen(QPen(Qt::black, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+				QRectF rectangle(sourcePoint.x()-20, sourcePoint.y()-20, 20.0, 20.0);
+				int startAngle = 35;
+				int spanAngle = 270 * 16;
+				painter->drawArc(rectangle, startAngle, spanAngle);
+				tag->setX(line.center().x()-40);
+				tag->setY(line.center().y()-30);
+				double alpha = (60*16*2*M_PI)/5760;
+				alpha = 0;
+				double r = 20/2.f;
+				QPointF pnt(r*cos(alpha) + rectangle.center().x(), r*sin(alpha) + rectangle.center().y());
+				QLineF line(pnt, destPoint );
+				double angle = std::atan2(-line.dy(), line.dx());
+				QPointF destArrowP1 = destPoint + QPointF(sin(angle + M_PI / 3) * arrowSize, cos(angle + M_PI / 3) * arrowSize);
+				QPointF destArrowP2 = destPoint + QPointF(sin(angle + M_PI - M_PI / 3) * arrowSize, cos(angle + M_PI - M_PI / 3) * arrowSize);
+				painter->drawPolygon(QPolygonF() << pnt << destArrowP1 << destArrowP2);
+		}
+		else
+		{
+			// Draw the line itself
+			painter->setPen(QPen(Qt::black, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+			painter->drawLine(line);
 
-    // Draw the line itself
-    painter->setPen(QPen(Qt::black, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-    painter->drawLine(line);
-
-    // Draw the arrows
-    double angle = std::atan2(-line.dy(), line.dx());
-
-//     QPointF sourceArrowP1 = sourcePoint + QPointF(sin(angle + M_PI / 3) * arrowSize,
-//                                                   cos(angle + M_PI / 3) * arrowSize);
-//     QPointF sourceArrowP2 = sourcePoint + QPointF(sin(angle + M_PI - M_PI / 3) * arrowSize,
-//                                                   cos(angle + M_PI - M_PI / 3) * arrowSize);
-    QPointF destArrowP1 = destPoint + QPointF(sin(angle - M_PI / 3) * arrowSize,
-                                              cos(angle - M_PI / 3) * arrowSize);
-    QPointF destArrowP2 = destPoint + QPointF(sin(angle - M_PI + M_PI / 3) * arrowSize,
-                                              cos(angle - M_PI + M_PI / 3) * arrowSize);
-
-    painter->setBrush(Qt::black);
-    //painter->drawPolygon(QPolygonF() << line.p1() << sourceArrowP1 << sourceArrowP2);
-    painter->drawPolygon(QPolygonF() << line.p2() << destArrowP1 << destArrowP2);
+			// Draw the arrows
+			double angle = std::atan2(-line.dy(), line.dx());
+			QPointF destArrowP1 = destPoint + QPointF(sin(angle - M_PI / 3) * arrowSize, cos(angle - M_PI / 3) * arrowSize);
+			QPointF destArrowP2 = destPoint + QPointF(sin(angle - M_PI + M_PI / 3) * arrowSize, cos(angle - M_PI + M_PI / 3) * arrowSize);
+			painter->setBrush(Qt::black);
+			painter->drawPolygon(QPolygonF() << line.p2() << destArrowP1 << destArrowP2);
+			tag->setX(line.center().x());
+			tag->setY(line.center().y());
+		}
+	
 }

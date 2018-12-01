@@ -38,6 +38,7 @@ class GraphNode : public QGraphicsItem
     QRectF boundingRect() const override;
     QPainterPath shape() const override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
+		void setColor(const QString &plain);
 
 	protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
@@ -49,6 +50,7 @@ class GraphNode : public QGraphicsItem
     QPointF newPos;
 		QList<GraphEdge *> edgeList;
 		QGraphicsSimpleTextItem *tag;
+		QString dark_color = "darkyello", plain_color = "yellow";
 };
 
 #endif // GRAPHNODE_H
