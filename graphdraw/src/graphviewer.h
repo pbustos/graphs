@@ -18,39 +18,43 @@
 #define GRAPHVIEWER_H
 
 #include <memory>
-#include "graph.h"
-#if Qt5_FOUND
-	#include <QtWidgets>
-#else
-	#include <QtGui>
-#endif
-#include <QApplication>
+
 #include <QGraphicsScene>
 #include <QGraphicsView>
 #include <QGraphicsEllipseItem>
 #include <QGraphicsRectItem>
-#include <QDesktopWidget>
-#include <QGLViewer/qglviewer.h>
-#include <nabo/nabo.h>
-#include <cppitertools/range.hpp>
-#include <qmat/QMatAll>
+#include <QGraphicsItem>
 
+class Graph;
+class GraphNode;
+class GraphEdge;
 
 class GraphViewer : public QGraphicsView
 {
 	public:
+		GraphViewer();
     void setGraph(std::shared_ptr<Graph> graph_,  QScrollArea *scrollArea);
 		void draw();
 		void applyForces(std::shared_ptr<Graph> g);
 		void applyForces2(std::shared_ptr<Graph> g);
+		void itemMoved();
 	
-		void wheelEvent(QWheelEvent *event);
+	protected:
+		void wheelEvent(QWheelEvent *event) override;
+		//void mousePressEvent(QMouseEvent* event) override;
+		//void mouseMoveEvent(QMouseEvent* event) override;
+		void timerEvent(QTimerEvent *event) override;
 		
 	private:
 		std::shared_ptr<Graph> graph;
 		QGraphicsScene scene;
 		QGraphicsEllipseItem *node;
-	
+		
+		int m_originX, m_originY;
+		QGraphicsItem *pressed_item;
+		
+		int timerId;
+    GraphNode *centerNode;
 		
 	public slots:
 	

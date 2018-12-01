@@ -4,6 +4,8 @@ SET ( SOURCES
   specificworker.cpp
   specificmonitor.cpp
   graphviewer.cpp
+  graphnode.cpp
+  graphedge.cpp
 )
 
 # Headers set
@@ -11,8 +13,10 @@ SET ( HEADERS
   specificworker.h
   specificmonitor.h
   graphviewer.h
+  graphnode.h
+  graphedge.h
 )
 
-
+add_definitions(-g)
 set(CMAKE_CXX_STANDARD 17)
-SET(SPECIFIC_LIBS -lnabo)
+SET(SPECIFIC_LIBS -lnabo -lxml2)

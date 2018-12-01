@@ -32,6 +32,9 @@
 #include <QGraphicsScene>
 #include <QGraphicsView>
 #include <QDesktopWidget>
+#include <QXmlSimpleReader>
+#include <QXmlInputSource>
+#include <QXmlDefaultHandler>
 #include <QGLViewer/qglviewer.h>
 #include <unordered_map>
 #include <any>
@@ -40,9 +43,24 @@
 #include <memory>
 #include <cppitertools/range.hpp>
 #include <nabo/nabo.h>
+#include <libxml2/libxml/parser.h>
+#include <libxml2/libxml/tree.h>
+
 #include "graph.h"
 #include "graphviewer.h"
 
+class Handler : public QXmlDefaultHandler
+{
+	bool fatalError (const QXmlParseException & exception)
+	{
+    qWarning() << "Fatal error on line" << exception.lineNumber()
+               << ", column" << exception.columnNumber() << ':'
+               << exception.message();
+
+    return false;
+	}
+	
+};
 
 class SpecificWorker : public GenericWorker
 {
@@ -57,6 +75,7 @@ public slots:
 	void initialize(int period);
 	void initializeFromInnerModel(InnerModel *inner);
 	void initializeRandom();
+	void initializeXML(std::string file_name);
 
 	void walkTree(InnerModelNode *node);
 

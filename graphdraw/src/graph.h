@@ -41,9 +41,9 @@ class Graph
 		
 		typename Nodes::iterator begin() 								{ return nodes.begin(); };
 		typename Nodes::iterator end() 									{ return nodes.end();   };
-		typename Nodes::const_iterator begin() const  					{ return nodes.begin(); };
-		typename Nodes::const_iterator end() const 	 					{ return nodes.begin(); };
-		size_t size() const 											{ return nodes.size();  };
+		typename Nodes::const_iterator begin() const  	{ return nodes.begin(); };
+		typename Nodes::const_iterator end() const 	 		{ return nodes.begin(); };
+		size_t size() const 														{ return nodes.size();  };
 		void addNode(std::uint32_t id) 									{ nodes.insert(std::pair(id, Value()));};
 		void addEdge(std::uint32_t from, std::uint32_t to) 			
 		{ 
@@ -74,7 +74,7 @@ class Graph
 		};
 		void print()
 		{
-			std::cout << "---------------------------------" << std::endl;
+			std::cout << "------------Printing Graph: " << nodes.size() << " elements -------------------------" << std::endl;
 			for( auto &[k,v] : nodes)
 			{
 				std::cout << "[" << attr<std::string>(v.draw_attrs["name"]) << "] : ";
@@ -82,13 +82,13 @@ class Graph
 					std::cout << attr<std::string>(vf.draw_attrs["name"]) << "( " << attr<std::string>(nodes[kf].draw_attrs["name"]) << " ); ";
 				std::cout << std::endl;
 			}
-			std::cout << "---------------------------------" << std::endl;
+			std::cout << "---------------- graph ends here --------------------------" << std::endl;
 		}
         //helpers
-		Value node(std::uint32_t id) const		{ return nodes.at(id); };
-		Value& node(std::uint32_t id)  	 		{ return nodes.at(id); };
+		Value node(std::uint32_t id) const			{ return nodes.at(id); };
+		Value& node(std::uint32_t id)  	 				{ return nodes.at(id); };
 		FanOut fanout(const Value &v) const   	{ return v.fanout;};
-    	FanOut& fanout(Value &v)              	{ return v.fanout;};
+    	FanOut& fanout(Value &v)              { return v.fanout;};
 		FanIn fanin(const Value &v) const     	{ return v.fanin;};
 		FanIn& fanin(Value &v)                	{ return v.fanin;};
 		Attribs attrs(const Value &v) const   	{ return v.attrs;};
