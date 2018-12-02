@@ -280,33 +280,8 @@ void SpecificWorker::initialize(int period)
 
 void SpecificWorker::compute()
 {
-// 	graph_viewer.applyForces(graph);
- 	graph_viewer.draw();
+
 }
 	
 
 
-// 	for(auto &[key, node] : graph)
-// 	{
-// 		auto &neighs = node.neighboors();
-// 		auto &attribs = node.attributes();
-// 		
-// 		auto px = attribs.getPosX();
-// 		auto py = attribs.getPosY();
-// 		
-// 		auto el = scene.addEllipse(px-200, py-200, 400, 400, QPen(QBrush(Qt::magenta),50),QBrush(Qt::white));
-// 		el->setZValue(1);
-// 	}
-// 
-// 	for(auto &[from, to] : graph->edges())
-// 	{
-// 		auto &fromAttribs = from.attributes()["posx"];
-// 		auto &toAttribs = to.attributes();
-// 		
-// 		auto &fx = fromAttribs.getPosX();
-// 		auto &fy = fromAttribs.getPosY();
-// 		auto &tx = toAttribs.getPosX();
-// 		auto &ty = toAttribs.getPosY();
-// 		
-// 		scene.addLine(fx, fy, tx, ty, QPen(QBrush(Qt::blue),50));
-// 	}

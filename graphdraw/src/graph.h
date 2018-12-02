@@ -77,9 +77,21 @@ class Graph
 			std::cout << "------------Printing Graph: " << nodes.size() << " elements -------------------------" << std::endl;
 			for( auto &[k,v] : nodes)
 			{
-				std::cout << "[" << attr<std::string>(v.draw_attrs["name"]) << "] : ";
+				std::cout << "[" << attr<std::string>(v.draw_attrs["name"]) << "] : " << std::endl;
+				std::cout << "	attrs:	";
+				for( auto &[ka, kv] : v.attrs)
+				{
+					std::cout << ka << " -> " << std::any_cast<std::string>(kv) << " , ";
+				}
+				std::cout << std::endl << "	edges:	";
 				for( auto &[kf,vf] : v.fanout)
-					std::cout << attr<std::string>(vf.draw_attrs["name"]) << "( " << attr<std::string>(nodes[kf].draw_attrs["name"]) << " ); ";
+				{
+					std::cout << attr<std::string>(vf.attrs["name"]) << "( " << attr<std::string>(nodes[kf].attrs["name"]) << " ) " << std::endl;
+					std::cout << "			edge attrs: ";
+					for( auto &[ke, ve] : vf.attrs)
+						std::cout << ke << " -> " << std::any_cast<std::string>(ve) << " , ";
+					std::cout << std::endl << "		";
+				}
 				std::cout << std::endl;
 			}
 			std::cout << "---------------- graph ends here --------------------------" << std::endl;

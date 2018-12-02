@@ -18,9 +18,10 @@
 #define GRAPHEDGE_H
 
 #include <QGraphicsItem>
-
+#include <QContextMenuEvent>
 
 class GraphNode;
+
 
 class GraphEdge : public QGraphicsItem
 {
@@ -33,15 +34,19 @@ class GraphEdge : public QGraphicsItem
     int type() const override { return Type; }
 
 	protected:
+    QPainterPath shape() const override;
     QRectF boundingRect() const override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
+		void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;  
 	
 	private:
 		GraphNode *source, *dest;
     qreal arrowSize;
     QPointF sourcePoint;
     QPointF destPoint;
-		QGraphicsSimpleTextItem *tag;
+		QString tag;
+		QGraphicsTextItem *rt_values = nullptr;
 };
 
 #endif // GRAPHEDGE_H

@@ -34,7 +34,6 @@ GraphNode::GraphNode(GraphViewer *graph_viewer) : graph(graph_viewer)
 void GraphNode::setTag(const QString &tag_)
 {
 	tag = new QGraphicsSimpleTextItem(tag_, this);
-	//tag->setScale(8);
 	tag->setX(20);	
 	tag->setY(-10);
 }

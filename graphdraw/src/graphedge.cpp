@@ -19,16 +19,20 @@
 #include <qmath.h>
 #include <QPainter>
 #include <QDebug>
+#include <QTableWidget>
+#include <QGraphicsSceneMouseEvent>
 
 GraphEdge::GraphEdge(GraphNode *sourceNode, GraphNode *destNode, const QString &edge_name) : arrowSize(10)
 {
     setAcceptedMouseButtons(0);
+		//setFlags(QGraphicsItem::ItemIsSelectable);
     source = sourceNode;
     dest = destNode;
     source->addEdge(this);
     dest->addEdge(this);
-		tag = new QGraphicsSimpleTextItem(edge_name, this);
-		tag->setBrush(QBrush(QColor("coral")));
+		//tag = new QGraphicsSimpleTextItem(edge_name, this);
+		tag = edge_name;
+		//tag->setBrush(QBrush(QColor("coral")));
 		adjust();
 }
 
@@ -65,17 +69,19 @@ void GraphEdge::adjust()
 
 QRectF GraphEdge::boundingRect() const
 {
-    if (!source || !dest)
-        return QRectF();
-
-    qreal penWidth = 1;
-    qreal extra = (penWidth + arrowSize) / 2.0;
-
-    return QRectF(sourcePoint, QSizeF(destPoint.x() - sourcePoint.x(),
-                                      destPoint.y() - sourcePoint.y()))
-        .normalized()
-        .adjusted(-extra, -extra, extra, extra);
+    qreal adjust = 5;
+		QLineF p(sourcePoint, destPoint);
+    return QRectF( p.center().x() - adjust, p.center().y() - adjust, 10 , 10);
 }
+
+QPainterPath GraphEdge::shape() const
+{
+    QPainterPath path;
+		QLineF p(sourcePoint, destPoint);
+    path.addEllipse( p.center().x() - 5, p.center().y() - 5, 10, 10);
+    return path;
+}
+
 
 void GraphEdge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
@@ -83,6 +89,8 @@ void GraphEdge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidg
         return;
 
     QLineF line(sourcePoint, destPoint);
+		
+		// self returning edges
     if (qFuzzyCompare(line.length(), qreal(0.)))
 		{
 				// Draw the line itself
@@ -91,32 +99,59 @@ void GraphEdge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidg
 				int startAngle = 35;
 				int spanAngle = 270 * 16;
 				painter->drawArc(rectangle, startAngle, spanAngle);
-				tag->setX(line.center().x()-40);
-				tag->setY(line.center().y()-30);
-				double alpha = (60*16*2*M_PI)/5760;
-				alpha = 0;
+				painter->setPen(QColor("coral"));
+				painter->drawText(rectangle.center(), tag);
+				double alpha = 0;
 				double r = 20/2.f;
-				QPointF pnt(r*cos(alpha) + rectangle.center().x(), r*sin(alpha) + rectangle.center().y());
-				QLineF line(pnt, destPoint );
-				double angle = std::atan2(-line.dy(), line.dx());
-				QPointF destArrowP1 = destPoint + QPointF(sin(angle + M_PI / 3) * arrowSize, cos(angle + M_PI / 3) * arrowSize);
-				QPointF destArrowP2 = destPoint + QPointF(sin(angle + M_PI - M_PI / 3) * arrowSize, cos(angle + M_PI - M_PI / 3) * arrowSize);
-				painter->drawPolygon(QPolygonF() << pnt << destArrowP1 << destArrowP2);
+				painter->setBrush(Qt::black);
+				painter->setPen(Qt::black);
+				painter->drawPolygon(QPolygonF() << QPointF(r*cos(alpha) + rectangle.center().x(), r*sin(alpha) + rectangle.center().y())
+																				 << QPointF(r*cos(alpha) + rectangle.center().x()-3, r*sin(alpha) + rectangle.center().y()-2) 
+																				 << QPointF(r*cos(alpha) + rectangle.center().x()+2, r*sin(alpha) + rectangle.center().y()-2));
 		}
 		else
 		{
+			//check if there is another parallel edge 
 			// Draw the line itself
+			painter->save();
 			painter->setPen(QPen(Qt::black, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-			painter->drawLine(line);
-
-			// Draw the arrows
 			double angle = std::atan2(-line.dy(), line.dx());
-			QPointF destArrowP1 = destPoint + QPointF(sin(angle - M_PI / 3) * arrowSize, cos(angle - M_PI / 3) * arrowSize);
-			QPointF destArrowP2 = destPoint + QPointF(sin(angle - M_PI + M_PI / 3) * arrowSize, cos(angle - M_PI + M_PI / 3) * arrowSize);
+			painter->translate(line.center().x(), line.center().y());
+			painter->rotate(-angle*180/M_PI);
+			
+			QRectF rectangle(-line.length()*0.5, -10, line.length(), 20);
+			painter->drawArc(rectangle, 0, 180*16);
+			
+			painter->setPen(QColor("coral"));
+			painter->drawText(rectangle.center(), tag);
+				
+			// Draw the arrows
+			QPointF destArrowP1 = QPointF(-line.length()*0.5,0) + QPointF(sin(M_PI / 2) * arrowSize, cos(M_PI / 2) * arrowSize);
+			QPointF destArrowP2 = QPointF(-line.length()*0.5,0) + QPointF(sin(M_PI / 4) * arrowSize, cos(M_PI / 4) * arrowSize);
 			painter->setBrush(Qt::black);
-			painter->drawPolygon(QPolygonF() << line.p2() << destArrowP1 << destArrowP2);
-			tag->setX(line.center().x());
-			tag->setY(line.center().y());
+			painter->setPen(Qt::black);
+			painter->drawPolygon(QPolygonF() << QPointF(-line.length()*0.5,0) << destArrowP1 << destArrowP2 );
+			painter->restore();
 		}
 	
 }
+
+
+void GraphEdge::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+		if(event->button() == Qt::RightButton and tag == "RT")
+		{
+			//qDebug() << "hola";
+			rt_values = new QGraphicsTextItem(this);
+			rt_values->setPlainText("Matrix showing RT values");
+			rt_values->setX(event->scenePos().x());
+			rt_values->setY(event->scenePos().y());
+   	}
+}
+
+void GraphEdge::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
+{
+	if( rt_values != nullptr)
+		delete rt_values;
+}
+

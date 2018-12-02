@@ -35,6 +35,7 @@ GraphViewer::GraphViewer()
 	this->setViewportUpdateMode(BoundingRectViewportUpdate);
 	this->setRenderHint(QPainter::Antialiasing);
 	this->setTransformationAnchor(AnchorUnderMouse);
+	//this->setContextMenuPolicy(Qt::ActionsContextMenu);
 	this->scale(qreal(0.8), qreal(0.8));
 	this->setMinimumSize(400, 400);
 	this->fitInView(scene.sceneRect(), Qt::KeepAspectRatio );

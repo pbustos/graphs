@@ -26,7 +26,7 @@ class QGraphicsSceneMouseEvent;
 class GraphNode : public QGraphicsItem
 {
 	public:
-    GraphNode(GraphViewer *graphWidget);
+    GraphNode(GraphViewer *graph_viewer);
 
     enum { Type = UserType + 1 };
     int type() const override { return Type; }
