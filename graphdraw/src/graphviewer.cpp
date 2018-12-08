@@ -21,7 +21,7 @@
 #include <QGLViewer/qglviewer.h>
 #include <nabo/nabo.h>
 #include <QApplication>
-#include "graph.h"
+
 #include "graphnode.h"
 #include "graphedge.h"
 
@@ -44,8 +44,9 @@ GraphViewer::GraphViewer()
  	this->move((availableGeometry.width() - width()) / 2, (availableGeometry.height() - height()) / 2);
 }
 
-void GraphViewer::setGraph(std::shared_ptr<Graph> graph_, QScrollArea *scrollArea)
+void GraphViewer::setGraph(std::shared_ptr<DSR::Graph> graph_, QScrollArea *scrollArea)
 {
+	std::cout << __FUNCTION__ << "-- Entering setGraph" << std::endl;
 	this->graph = graph_;
 	this->setParent(scrollArea);
 	scrollArea->setWidget(this);
@@ -54,9 +55,11 @@ void GraphViewer::setGraph(std::shared_ptr<Graph> graph_, QScrollArea *scrollAre
 	for(auto &[node_id, node_value] : *graph)
 	{
 			// get attrs from graph
-			auto &[node_atts, node_draw_attrs, node_fanout, node_fanin] = node_value;
+			//auto &[node_atts, node_draw_attrs, node_fanout, node_fanin] = node_value;  //QUITAR ACCESO POR NODO
+			auto &node_draw_attrs = graph->nodeDrawAttrs(node_id);
 			float node_posx = graph->attr<float>(node_draw_attrs["posx"]);
 			float node_posy = graph->attr<float>(node_draw_attrs["posy"]);
+	
 			std::string color_name = graph->attr<std::string>(node_draw_attrs["color"]);
 			QString qname = QString::fromStdString(graph->attr<std::string>(node_draw_attrs["name"]));
 			
@@ -70,15 +73,17 @@ void GraphViewer::setGraph(std::shared_ptr<Graph> graph_, QScrollArea *scrollAre
 			//add to graph
 			node_draw_attrs["gnode"] = gnode;
 	}		
-	
+
 	// add edges after all nodes have been created
 	for(auto &[node_id, node_value] : *graph)
 	{
-			auto &[node_atts, node_draw_attrs, node_fanout, node_fanin] = node_value;
+			//auto &[node_atts, node_draw_attrs, node_fanout, node_fanin] = node_value;
+			auto node_draw_attrs = graph->nodeDrawAttrs(node_id);
 			auto node_origen = graph->attr<GraphNode*>(node_draw_attrs["gnode"]); 
+			auto node_fanout = graph->fanout(node_id);
 			for( auto &[node_adj, edge_atts] : node_fanout)
 			{
-				auto [node_dest_atts, node_dest_draw_attrs, node_dest_fanout, node_dest_fanin] = graph->node(node_adj);
+				auto node_dest_draw_attrs = graph->nodeDrawAttrs(node_adj);
 				auto node_dest = graph->attr<GraphNode*>(node_dest_draw_attrs["gnode"]); 
 				auto edge_tag = graph->attr<std::string>(edge_atts.draw_attrs["name"]);
 				scene.addItem(new GraphEdge(node_origen, node_dest, edge_tag.c_str()));

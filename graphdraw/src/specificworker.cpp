@@ -62,7 +62,7 @@ void SpecificWorker::walkTree(InnerModelNode *node)
 	
 	graph->addNode(node_id);
 	auto node_parent = node_id;
-	Graph::Attribs atts;
+	DSR::DrawAttribs atts;
 	auto rd = QVec::uniformVector(2,0,3000);
 	auto ids = node->id.toStdString();
 	atts.insert(std::pair("name", ids));
@@ -81,9 +81,9 @@ void SpecificWorker::walkTree(InnerModelNode *node)
 	for(auto &it : node->children)	
 	{	
 		graph->addEdge(node_parent, node_id);
-		graph->addEdgeDrawAttribs(node_parent, node_id, Graph::Attribs{std::pair("name", std::string{"parentOf"})});
+		graph->addEdgeDrawAttribs(node_parent, node_id, DSR::DrawAttribs{std::pair("name", std::string{"parentOf"})});
 		graph->addEdge(node_id, node_parent);
-		graph->addEdgeDrawAttribs(node_id, node_parent, Graph::Attribs{std::pair("name", std::string{"childOf"})});
+		graph->addEdgeDrawAttribs(node_id, node_parent, DSR::DrawAttribs{std::pair("name", std::string{"childOf"})});
 		walkTree(it);
 	}
 }
@@ -102,7 +102,7 @@ void SpecificWorker::initializeRandom()
 	
 	for(std::uint32_t i=0; i<nNodes; i++)
 	{
-		Graph::Attribs atts;
+		DSR::DrawAttribs atts;
 		auto rd = QVec::uniformVector(2,-200,200);
 		atts.insert(std::pair("posx", rd[0]));
 		atts.insert(std::pair("posy", rd[1]));
@@ -115,13 +115,14 @@ void SpecificWorker::initializeRandom()
 	{
 		auto rd = QVec::uniformVector(2,0,nNodes);
 		graph->addEdge(rd[0], rd[1]);
-		graph->addEdgeDrawAttribs(rd[0], rd[1], Graph::Attribs{std::pair("name", std::string("edge"))});
+		graph->addEdgeDrawAttribs(rd[0], rd[1], DSR::DrawAttribs{std::pair("name", std::string("edge"))});
 	}
 }
 
 void SpecificWorker::initializeXML(std::string file_name)
 {
 	//version = 0;
+	std::cout << __FUNCTION__ << "Reading xml file: " << file_name << std::endl;
 
 	// Open file and make initial checks
 	xmlDocPtr doc;
@@ -155,9 +156,16 @@ void SpecificWorker::initializeXML(std::string file_name)
 			//AGMModelSymbol::SPtr s = newSymbol(atoi((char *)sid), (char *)stype);
 			std::uint32_t node_id = std::atoi((char *)sid);
 			graph->addNode(node_id);
-			graph->addNodeAttribs(node_id, Graph::Attribs{ std::pair("name", std::string((char *)stype))});
-			graph->addNodeAttribs(node_id, Graph::Attribs{ std::pair("type", std::string((char *)stype))});
-			Graph::Attribs atts;
+			std::string node_type((char *)stype);
+			graph->addNodeAttribs(node_id, DSR::Attribs{ 
+								std::pair("name", node_type), 
+								std::pair("type", node_type),
+								std::pair("level", std::uint32_t(0)),
+								std::pair("parent", std::uint32_t(0))
+				});
+	
+			// Draw attributes come now
+			DSR::DrawAttribs atts;
 			std::string qname = (char *)stype;
 			std::string full_name = std::string((char *)stype) + " [" + std::string((char *)sid) + "]";
 			auto rd = QVec::uniformVector(2,-200,200);
@@ -174,7 +182,7 @@ void SpecificWorker::initializeXML(std::string file_name)
 			
 			atts.insert(std::pair("color", color));
 			graph->addNodeDrawAttribs(node_id, atts);
-			//std::cout << node_id << " " <<  std::string((char *)stype) << std::endl;
+			std::cout << node_id << " " <<  std::string((char *)stype) << std::endl;
 			
 			xmlFree(sid);
 			xmlFree(stype);
@@ -187,7 +195,7 @@ void SpecificWorker::initializeXML(std::string file_name)
 					xmlChar *attr_value = xmlGetProp(cur2, (const xmlChar *)"value");
 					
 					//s->setAttribute(std::string((char *)attr_key), std::string((char *)attr_value));
-					graph->addNodeAttribs(node_id, Graph::Attribs{ std::pair(std::string((char *)attr_key), std::string((char *)attr_value))});
+					graph->addNodeAttribs(node_id, DSR::Attribs{ std::pair(std::string((char *)attr_key), std::string((char *)attr_value))});
 					
 					xmlFree(attr_key);
 					xmlFree(attr_value);
@@ -210,12 +218,12 @@ void SpecificWorker::initializeXML(std::string file_name)
 		{
 			xmlChar *srcn = xmlGetProp(cur, (const xmlChar *)"src");
 			if (srcn == NULL) { printf("Link %s lacks of attribute 'src'.\n", (char *)cur->name); exit(-1); }
-			int a = atoi((char *)srcn);
+			std::uint32_t a = atoi((char *)srcn);
 			xmlFree(srcn);
 
 			xmlChar *dstn = xmlGetProp(cur, (const xmlChar *)"dst");
 			if (dstn == NULL) { printf("Link %s lacks of attribute 'dst'.\n", (char *)cur->name); exit(-1); }
-			int b = atoi((char *)dstn);
+			std::uint32_t b = atoi((char *)dstn);
 			xmlFree(dstn);
 
 			xmlChar *label = xmlGetProp(cur, (const xmlChar *)"label");
@@ -240,11 +248,36 @@ void SpecificWorker::initializeXML(std::string file_name)
 			}
 			
 			graph->addEdge(a, b);
- 			graph->addEdgeAttribs(a, b, Graph::Attribs{std::pair("name", edgeName)});
-			graph->addEdgeDrawAttribs(a, b, Graph::Attribs{std::pair("name", edgeName)});
- 			Graph::Attribs edge_attribs;
- 			for(auto &r : attrs)
- 				edge_attribs.insert(r);
+ 			graph->addEdgeAttribs(a, b, DSR::Attribs{std::pair("name", edgeName)});
+			graph->addEdgeDrawAttribs(a, b, DSR::DrawAttribs{std::pair("name", edgeName)});
+ 			DSR::Attribs edge_attribs;
+			if( edgeName == "RT")   //add level to node b as a.level +1, and add parent to node b as a
+			{ 	
+				graph->addNodeAttribs(b, DSR::Attribs{ std::pair("level", graph->getNodeLevel(a)+1), std::pair("parent", a)});
+				RMat::RTMat rt;
+				float x,y,z;
+				for(auto &[k,v] : attrs)
+				{
+					if(k=="tx")	( x = std::stof(v) );
+					if(k=="ty")	( y = std::stof(v) );
+					if(k=="tz")	( z = std::stof(v) );
+					rt.setTr( x, y, z);
+					if(k=="rx")	rt.setRX(std::stof(v));
+					if(k=="ry")	rt.setRY(std::stof(v));
+					if(k=="rz")	rt.setRZ(std::stof(v));
+ 					graph->addEdgeAttribs(a, b, DSR::Attribs{std::pair("rt", rt)});
+				}
+			}
+			else
+			{
+				graph->addNodeAttribs(b, DSR::Attribs{ std::pair("parent", 0)});
+				for(auto &r : attrs)
+ 					edge_attribs.insert(r);
+			}
+
+		
+			std::cout << "edge  from " << a << " " <<  edgeName  << std::endl;
+		
  			graph->addEdgeAttribs(a, b, edge_attribs);
 			
 	//	  graph->addEdgeByIdentifiers(a, b, edgeName, attrs);
@@ -259,19 +292,21 @@ void SpecificWorker::initializeXML(std::string file_name)
 
 void SpecificWorker::initialize(int period)
 {
-	graph = std::make_shared<Graph>();
+	graph = std::make_shared<DSR::Graph>();
 	//initializeFromInnerModel(innerModel);
 	//initializeRandom();
 	initializeXML("initialModel_hybrid.xml");
 	graph->print();
 	
-	std::cout << __FILE__ << __FUNCTION__ << "Initializing graphic graph" << std::endl;
+	std::cout << __FILE__ << __FUNCTION__ << " -- Initializing graphic graph" << std::endl;
 	graph_viewer.setGraph(graph, scrollArea);
-	std::cout << __FILE__ << __FUNCTION__ << "Graph set OK" << std::endl;
-	graph_viewer.show();	
-	std::cout << __FILE__ << __FUNCTION__ << "Graph shown OK" << std::endl;
-	//graph_viewer.applyForces(graph);
-	
+	std::cout << __FILE__ << __FUNCTION__ << " -- Graph set OK" << std::endl;
+	//graph_viewer.show();	
+	std::cout << __FILE__ << __FUNCTION__ << " -- Graph shown OK" << std::endl;
+
+	innerModelTreeWalk(100);
+	setLists(20,23);
+
 	this->Period = 100;
 	timer.start(Period);  
 	
@@ -283,5 +318,91 @@ void SpecificWorker::compute()
 
 }
 	
+// recursive walk through the InnerModel tree embedded in DSR
+void SpecificWorker::innerModelTreeWalk(std::uint32_t id)
+{
+	std::cout << "id: " << id << std::endl;
+	if (graph->nodeExists(id) == false)
+	{
+		std::cout << __FUNCTION__ << "Non existing node: " << id << std::endl;
+		return;
+	}
+	
+	for(auto &child_id : graph->edgesByLabel(id, "RT")) 
+	{
+		innerModelTreeWalk(child_id);
+		//exit(-1);
+	} 
+}
 
 
+/* RTMat SpecificWorker::getTransformationMatrix(const QString &to, const QString &from)
+{
+	RTMat ret;
+
+	if (localHashTr.contains(QPair<QString, QString>(to, from)))
+	{
+		ret = localHashTr[QPair<QString, QString>(to, from)];
+	}
+	else
+	{
+		setLists(from, to);
+		foreach (InnerModelNode *i, listA)
+		{
+			ret = ((RTMat)(*i)).operator*(ret);
+		}
+		foreach (InnerModelNode *i, listB)
+		{
+			ret = i->invert() * ret;
+		}
+		localHashTr[QPair<QString, QString>(to, from)] = ret;
+	}
+	return RTMat(ret);
+} */
+
+void SpecificWorker::setLists(const std::uint32_t origId, const std::uint32_t destId)
+{
+	//InnerModelNode *a = hash[origId], *b = hash[destId];
+	auto a = origId;
+	auto b = destId;
+	
+/* 	if (!a)
+		throw InnerModelException("Cannot find node: \""+ origId.toStdString()+"\"");
+	if (!b)
+		throw InnerModelException("Cannot find node: "+ destId.toStdString()+"\"");
+ */
+	std::uint32_t a_level = graph->getNodeLevel(origId);
+	std::uint32_t b_level = graph->getNodeLevel(destId);
+	std::uint32_t min_level = std::min(a_level,b_level);
+	
+	listA.clear();
+	while (a_level >= min_level)
+	{
+		listA.push_back(a);
+		if(graph->getParent(a) == 0)
+			break;
+		a = graph->getParent(a);
+	}
+
+	listB.clear();
+	while (b_level >= min_level)
+	{
+		listB.push_front(b);
+		if(graph->getParent(b) == 0)
+			break;
+		b = graph->getParent(b);
+	}
+	while (b != a)
+	{
+		listA.push_back(a);
+		listB.push_front(b);
+		a = graph->getParent(a);
+		b = graph->getParent(b);
+	}
+
+	for(auto a : listA)
+		std::cout << "list A " << a << std::endl;
+	for(auto a : listB)
+		std::cout << "list A " << a << std::endl;
+		
+}

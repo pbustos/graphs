@@ -78,13 +78,16 @@ public slots:
 	void initializeXML(std::string file_name);
 
 	void walkTree(InnerModelNode *node);
+	void innerModelTreeWalk(std::uint32_t id);
+	void setLists(const std::uint32_t origId, const std::uint32_t destId);
+
 
 private:
 	InnerModel *innerModel;
 
-	std::shared_ptr<Graph> graph;
+	std::shared_ptr<DSR::Graph> graph;
 	GraphViewer graph_viewer;
-	
+	std::list<std::uint32_t> listA, listB;
 };
 
 #endif

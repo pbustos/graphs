@@ -18,14 +18,14 @@
 #define GRAPHVIEWER_H
 
 #include <memory>
-
 #include <QGraphicsScene>
 #include <QGraphicsView>
 #include <QGraphicsEllipseItem>
 #include <QGraphicsRectItem>
 #include <QGraphicsItem>
+#include "graph.h"
 
-class Graph;
+//class Graph;
 class GraphNode;
 class GraphEdge;
 
@@ -33,7 +33,7 @@ class GraphViewer : public QGraphicsView
 {
 	public:
 		GraphViewer();
-    void setGraph(std::shared_ptr<Graph> graph_,  QScrollArea *scrollArea);
+    void setGraph(std::shared_ptr<DSR::Graph> graph_,  QScrollArea *scrollArea);
 		void draw();
 // 		void applyForces(std::shared_ptr<Graph> g);
 // 		void applyForces2(std::shared_ptr<Graph> g);
@@ -46,7 +46,7 @@ class GraphViewer : public QGraphicsView
 		void timerEvent(QTimerEvent *event) override;
 		
 	private:
-		std::shared_ptr<Graph> graph;
+		std::shared_ptr<DSR::Graph> graph;
 		QGraphicsScene scene;
 		QGraphicsEllipseItem *node;
 		
