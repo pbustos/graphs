@@ -19,7 +19,7 @@
 #include <qmat/QMatAll>
 #include <QDesktopWidget>
 #include <QGLViewer/qglviewer.h>
-#include <nabo/nabo.h>
+//#include <nabo/nabo.h>
 #include <QApplication>
 
 #include "graphnode.h"

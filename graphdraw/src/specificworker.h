@@ -42,7 +42,6 @@
 #include <string>
 #include <memory>
 #include <cppitertools/range.hpp>
-#include <nabo/nabo.h>
 #include <libxml2/libxml/parser.h>
 #include <libxml2/libxml/tree.h>
 
