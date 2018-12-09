@@ -6,6 +6,7 @@ SET ( SOURCES
   graphviewer.cpp
   graphnode.cpp
   graphedge.cpp
+  graph.cpp
 )
 
 # Headers set

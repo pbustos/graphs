@@ -29,8 +29,6 @@
 
 #include <genericworker.h>
 #include <innermodel/innermodel.h>
-#include <QGraphicsScene>
-#include <QGraphicsView>
 #include <QDesktopWidget>
 #include <QXmlSimpleReader>
 #include <QXmlInputSource>
@@ -76,18 +74,13 @@ public slots:
 	void initializeRandom();
 	void initializeXML(std::string file_name);
 
-	void walkTree(InnerModelNode *node);
-	void innerModelTreeWalk(std::uint32_t id);
-	void setLists(const std::uint32_t &origId, const std::uint32_t &destId);
-	RMat::RTMat getTransformationMatrix(const std::uint32_t &to, const std::uint32_t &from);
-	RMat::QVec transform(const std::uint32_t &destId, const QVec &initVec, const std::uint32_t &origId);
-
 private:
 	InnerModel *innerModel;
+	void walkTree(InnerModelNode *node);
 
 	std::shared_ptr<DSR::Graph> graph;
 	GraphViewer graph_viewer;
-	std::list<std::uint32_t> listA, listB;
+	
 };
 
 #endif

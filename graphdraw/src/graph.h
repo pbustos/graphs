@@ -42,25 +42,9 @@ namespace DSR
 	using FanOut = std::unordered_map<std::uint32_t, EdgeAttrs>;
 	using FanIn = std::vector<std::uint32_t>;
 
-	/* class Value
-	{
-		public:
-			Attribs &attrs() 			{ return node_attrs;};
-			DrawAttribs &drawAttrs() 	{ return node_draw_attrs;};
-			FanOut &fanout() 			{ return node_fanout;};
-			FanIn &fanin()	 			{ return node_fanin;};
-		
-		private:
-			Attribs node_attrs;
-			DrawAttribs node_draw_attrs;
-			FanOut node_fanout;
-			FanIn node_fanin;
-	}; */
-
 	class Graph 
 	{
 		public:
-			
 			 struct Value
 			{
 				Attribs attrs;
@@ -70,9 +54,9 @@ namespace DSR
 			}; 
 			using Nodes = std::unordered_map<std::uint32_t, Value>;
 			
-			/////////////
-			//API 
-			////////////
+			////////////////////////////////////////////////////////////////////////////////////////////
+			//									Graph API 
+			////////////////////////////////////////////////////////////////////////////////////////////
 			
 			typename Nodes::iterator begin() 					{ return nodes.begin(); };
 			typename Nodes::iterator end() 						{ return nodes.end();   };
@@ -153,7 +137,6 @@ namespace DSR
 				std::cout << "---------------- graph ends here --------------------------" << std::endl;
 			}
 			
-		  // help
 		  
 			//Value node(std::uint32_t id) const			{ return nodes.at(id); };
 			//Value& node(std::uint32_t id)  	 				{ return nodes.at(id); };
@@ -175,15 +158,19 @@ namespace DSR
 			Attribs& edgeAttrs(std::uint32_t from, std::uint32_t to) 		{ return nodes.at(from).fanout.at(to).attrs;};
 			Attribs edgeAttrs(std::uint32_t from,  std::uint32_t to) const	{ return nodes.at(from).fanout.at(to).attrs;};
 			
+			template<typename Ta>
+			Ta attr(const std::any &s) const     			{ return std::any_cast<Ta>(s);};
 
-			template<typename T>
-			T attr(const std::any &s) const     			{ return std::any_cast<T>(s);};
-
-			template<typename T>
-			T attr(const MTypes &s) const    	 			{ return std::get<T>(s);};
+			template<typename Ta>
+			Ta attr(const MTypes &s) const    	 			{ return std::get<Ta>(s);};
 			
-
 			bool nodeExists(std::uint32_t id) const			{ return nodes.count(id) > 0;}
+			template<typename Ta>
+			bool nodeHasAttrib(std::uint32_t id, const std::string &key, const std::string &value) const 
+			{  
+				auto &ats = nodes.at(id).attrs;
+				return (ats.count(key) > 0) and (this->attr<Ta>(ats.at(key))==value);
+			};
 			std::vector<std::uint32_t> edgesByLabel(std::uint32_t id, const std::string &tag) 	
 			{ 
 				std::vector<std::uint32_t> keys;
@@ -192,11 +179,65 @@ namespace DSR
 						keys.push_back(k);
 				return keys;
     		};
+			
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// 													InnerModel API
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+			// ///////////////////////////////////////////////////
+			// /// Tree update methods
+			// ///////////////////////////////////////////////////
+			// void setRoot(InnerModelNode *node);
+			// void cleanupTables();
+			void updateTransformValues(const std::uint32_t &transformId, float tx, float ty, float tz, float rx, float ry, float rz, const std::uint32_t &parentId = 0);
+			void innerModelTreeWalk(std::uint32_t id);
+
+			// ////////////////////////////////////////////
+			// /// Transformation matrix retrieval methods
+			// ///////////////////////////////////////////
+			using ABLists = std::tuple< std::list<std::uint32_t>, std::list<std::uint32_t> >;
+
+			ABLists setLists(const std::uint32_t &origId, const std::uint32_t &destId);
+			RMat::RTMat getTransformationMatrix(const std::uint32_t &to, const std::uint32_t &from);
+			RMat::QVec transform(const std::uint32_t &destId, const QVec &initVec, const std::uint32_t &origId);
+			// RTMat getTransformationMatrix(const QString &destId, const QString &origId);
+			// RTMat getTransformationMatrixS(const std::string &destId, const std::string &origId);
+			// QMat getRotationMatrixTo(const QString &to, const QString &from);
+			// QVec getTranslationVectorTo(const QString &to, const QString &from);
+			// QVec rotationAngles(const QString & destId, const QString & origId);
+			
+			// ////////////////////////////////////////////
+			// /// Editing
+			// ///////////////////////////////////////////
+			// template <class N> N* getNode(const std::string &id) const
+			// void removeSubTree(InnerModelNode *item, QStringList *l);
+			// void removeNode(const QString & id);
+			// void moveSubTree(InnerModelNode *nodeSrc, InnerModelNode *nodeDst);
+			// void getSubTree(InnerModelNode *node, QStringList *l);
+			// void getSubTree(InnerModelNode *node, QList<InnerModelNode *> *l);
+			// void computeLevels(InnerModelNode *node);
+			// InnerModelNode *getRoot() { return root; }
+			// QString getParentIdentifier(QString id);
+			// std::string getParentIdentifierS(std::string id);
 			std::uint32_t getNodeLevel(std::uint32_t id)  	{ return std::get<std::uint32_t>(nodes.at(id).attrs["level"]); };
 			std::uint32_t getParent(std::uint32_t id)   	{ return std::get<std::uint32_t>(nodes.at(id).attrs["parent"]); };
-			
+
+
+			// ////////////////////////////
+			// // FCL related
+			// ////////////////////////////
+			// bool collidable(const QString &a);
+			// bool collide(const QString &a, const QString &b);
+			// float distance(const QString &a, const QString &b);
+
+			// ////////////////////////////
+			// // Jacobians
+			// ////////////////////////////
+			// QMat jacobian(QStringList &listaJoints, const QVec &motores, const QString &endEffector);
+
 		private:
 			Nodes nodes;
+			// For InnerModel
 	};
 }
 #endif // GRAPH_H
@@ -213,3 +254,18 @@ namespace DSR
 	// 				return std::get<Ta>(edgeAttrs(*edge,to).at(tag));
 	// 			else return Ta();
 	// 		};
+
+	/* class Value
+	{
+		public:
+			Attribs &attrs() 			{ return node_attrs;};
+			DrawAttribs &drawAttrs() 	{ return node_draw_attrs;};
+			FanOut &fanout() 			{ return node_fanout;};
+			FanIn &fanin()	 			{ return node_fanin;};
+		
+		private:
+			Attribs node_attrs;
+			DrawAttribs node_draw_attrs;
+			FanOut node_fanout;
+			FanIn node_fanin;
+	}; */

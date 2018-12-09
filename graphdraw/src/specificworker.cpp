@@ -51,7 +51,7 @@ bool SpecificWorker::setParams(RoboCompCommonBehavior::ParameterList params)
 
 void SpecificWorker::initializeFromInnerModel(InnerModel *inner)
 {
-	walkTree(inner->getRoot());
+	this->walkTree(inner->getRoot());
 }
 
 void SpecificWorker::walkTree(InnerModelNode *node)
@@ -304,14 +304,17 @@ void SpecificWorker::initialize(int period)
 	//graph_viewer.show();	
 	std::cout << __FILE__ << __FUNCTION__ << " -- Graph shown OK" << std::endl;
 
-	innerModelTreeWalk(100);
-	auto r = transform(20, QVec::zeros(3), 23);
+	graph->innerModelTreeWalk(100);
+	auto r = graph->transform(20, QVec::zeros(3), 23);
 	r.print("Target coordinates");
-	r = transform(5, QVec::zeros(3), 1);
+	r = graph->transform(5, QVec::zeros(3), 1);
 	r.print("Target coordinates");
-	r = transform(5, QVec::zeros(3), 100);
+	r = graph->transform(5, QVec::zeros(3), 100);
 	r.print("Target coordinates");
 	
+	std::cout << "updatetransformvalues" << std::endl;
+	graph->updateTransformValues(1, 20, 30, 40, 50, 60, 70);
+
 	this->Period = 100;
 	timer.start(Period);  
 	
@@ -321,123 +324,4 @@ void SpecificWorker::initialize(int period)
 void SpecificWorker::compute()
 {
 	
-}
-	
-// recursive walk through the InnerModel tree embedded in DSR
-void SpecificWorker::innerModelTreeWalk(std::uint32_t id)
-{
-	//std::cout << "id: " << id << std::endl;
-	if (graph->nodeExists(id) == false)
-	{
-		std::cout << __FUNCTION__ << "Non existing node: " << id << std::endl;
-		return;
-	}
-	
-	for(auto &child_id : graph->edgesByLabel(id, "RT")) 
-	{
-		innerModelTreeWalk(child_id);
-		//exit(-1);
-	} 
-}
-
-RMat::QVec SpecificWorker::transform(const std::uint32_t &destId, const QVec &initVec, const std::uint32_t &origId)
-{
-	if (initVec.size()==3)
-	{
-		return (getTransformationMatrix(destId, origId) * initVec.toHomogeneousCoordinates()).fromHomogeneousCoordinates();
-	}
-	else if (initVec.size()==6)
-	{
-		const QMat M = getTransformationMatrix(destId, origId);
-		const QVec a = (M * initVec.subVector(0,2).toHomogeneousCoordinates()).fromHomogeneousCoordinates();
-		const Rot3D R(initVec(3), initVec(4), initVec(5));
-		const QVec b = (M.getSubmatrix(0,2,0,2)*R).extractAnglesR_min();
-		QVec ret(6);
-		ret(0) = a(0);
-		ret(1) = a(1);
-		ret(2) = a(2);
-		ret(3) = b(0);
-		ret(4) = b(1);
-		ret(5) = b(2);
-		return ret;
-	}
-	else
-	{
-		throw InnerModelException("InnerModel::transform was called with an unsupported vector size.");
-	}
-}
-
-RTMat SpecificWorker::getTransformationMatrix(const std::uint32_t &to, const std::uint32_t &from)
-{
-	RTMat ret;
-
-	// if (localHashTr.contains(QPair<QString, QString>(to, from)))
-	// {
-	// 	ret = localHashTr[QPair<QString, QString>(to, from)];
-	// }
-	// else
-	// {
-		setLists(from, to);
-		for (auto to = listA.begin(); to != std::prev(listA.end()); ++to)
-		{
-			//ret = ((RTMat)(*i)).operator*(ret);
-			//std::cout << "List A id " << *to << std::endl;
-			ret = graph->edgeAttrib<RMat::RTMat>(*(std::next(to,1)), *to, "RT") * ret;
-		}
-		for (auto from = listB.begin(); from != std::prev(listB.end()); ++from)
-		{
-			//ret = i->invert() * ret;
-			ret = graph->edgeAttrib<RMat::RTMat>(*from, *(std::next(from)), "RT").invert() * ret;
-			//std::cout << "List B id " << *from << std::endl;
-		}
-		//localHashTr[QPair<QString, QString>(to, from)] = ret;
-	// }
-	return ret;
-} 
- 
-void SpecificWorker::setLists(const std::uint32_t &origId, const std::uint32_t &destId)
-{
-	//InnerModelNode *a = hash[origId], *b = hash[destId];
-	auto a = origId;
-	auto b = destId;
-	
-/* 	if (!a)
-		throw InnerModelException("Cannot find node: \""+ origId.toStdString()+"\"");
-	if (!b)
-		throw InnerModelException("Cannot find node: "+ destId.toStdString()+"\"");
- */
-	std::uint32_t a_level = graph->getNodeLevel(origId);
-	std::uint32_t b_level = graph->getNodeLevel(destId);
-	std::uint32_t min_level = std::min(a_level,b_level);
-	
-	listA.clear();
-	while (a_level >= min_level)
-	{
-		listA.push_back(a);
-		if(graph->getParent(a) == 0)
-			break;
-		a = graph->getParent(a);
-	}
-
-	listB.clear();
-	while (b_level >= min_level)
-	{
-		listB.push_front(b);
-		if(graph->getParent(b) == 0)
-			break;
-		b = graph->getParent(b);
-	}
-	while (b != a)
-	{
-		listA.push_back(a);
-		listB.push_front(b);
-		a = graph->getParent(a);
-		b = graph->getParent(b);
-	}
-
-	for(auto a : listA)
-		std::cout << "list A " << a << std::endl;
-	for(auto a : listB)
-		std::cout << "list B " << a << std::endl;
-		
 }
