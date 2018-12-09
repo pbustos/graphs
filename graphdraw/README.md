@@ -1,9 +1,7 @@
-```
-```
-#
-``` graphdraw
-```
-Intro to component here
+## IMPORTANT
+
+### This component requires the include-only library https://github.com/ryanhaining/cppitertools
+Clone it in /usr/local/include
 
 
 ## Configuration parameters
@@ -38,7 +36,4 @@ After editing the new config file we can run the component:
 
 ## IMPORTANT
 
-The component uses the library libnabo. You have to instal it from https://github.com/ethz-asl/libnabo and edit the CMakeLists.txt with cmake-gui to select the MAKE_SHARED option. Then, sudo make install and the mandatory ldconfig.
 
-libnabo uses Eigen. You need to install it from the repo and create a symbolic link: 
-ln -s /usr/include/eigen3/Eigen /usr/include/Eigen so it can find the included files.
