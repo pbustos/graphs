@@ -1,4 +1,6 @@
-## This component reuires the include-pnly library https://github.com/ryanhaining/cppitertools
+## IMPORTANT
+
+### This component requires the include-only library https://github.com/ryanhaining/cppitertools
 Clone it in /usr/local/include
 
 
