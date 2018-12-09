@@ -19,4 +19,4 @@ SET ( HEADERS
 
 add_definitions(-g)
 set(CMAKE_CXX_STANDARD 17)
-SET(SPECIFIC_LIBS -lnabo -lxml2)
+SET(SPECIFIC_LIBS  -lxml2)
