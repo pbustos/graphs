@@ -4,7 +4,6 @@
 ``
 
 ```
-Cpp
 
 
 ## This component reuires the include-pnly library https://github.com/ryanhaining/cppitertools
