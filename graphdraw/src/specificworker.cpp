@@ -265,7 +265,7 @@ void SpecificWorker::initializeXML(std::string file_name)
 					if(k=="rx")	rt.setRX(std::stof(v));
 					if(k=="ry")	rt.setRY(std::stof(v));
 					if(k=="rz")	rt.setRZ(std::stof(v));
- 					graph->addEdgeAttribs(a, b, DSR::Attribs{std::pair("rt", rt)});
+ 					graph->addEdgeAttribs(a, b, DSR::Attribs{std::pair("RT", rt)});
 				}
 			}
 			else
@@ -305,8 +305,13 @@ void SpecificWorker::initialize(int period)
 	std::cout << __FILE__ << __FUNCTION__ << " -- Graph shown OK" << std::endl;
 
 	innerModelTreeWalk(100);
-	setLists(20,23);
-
+	auto r = transform(20, QVec::zeros(3), 23);
+	r.print("Target coordinates");
+	r = transform(5, QVec::zeros(3), 1);
+	r.print("Target coordinates");
+	r = transform(5, QVec::zeros(3), 100);
+	r.print("Target coordinates");
+	
 	this->Period = 100;
 	timer.start(Period);  
 	
@@ -315,13 +320,13 @@ void SpecificWorker::initialize(int period)
 
 void SpecificWorker::compute()
 {
-
+	
 }
 	
 // recursive walk through the InnerModel tree embedded in DSR
 void SpecificWorker::innerModelTreeWalk(std::uint32_t id)
 {
-	std::cout << "id: " << id << std::endl;
+	//std::cout << "id: " << id << std::endl;
 	if (graph->nodeExists(id) == false)
 	{
 		std::cout << __FUNCTION__ << "Non existing node: " << id << std::endl;
@@ -335,32 +340,62 @@ void SpecificWorker::innerModelTreeWalk(std::uint32_t id)
 	} 
 }
 
-
-/* RTMat SpecificWorker::getTransformationMatrix(const QString &to, const QString &from)
+RMat::QVec SpecificWorker::transform(const std::uint32_t &destId, const QVec &initVec, const std::uint32_t &origId)
 {
-	RTMat ret;
-
-	if (localHashTr.contains(QPair<QString, QString>(to, from)))
+	if (initVec.size()==3)
 	{
-		ret = localHashTr[QPair<QString, QString>(to, from)];
+		return (getTransformationMatrix(destId, origId) * initVec.toHomogeneousCoordinates()).fromHomogeneousCoordinates();
+	}
+	else if (initVec.size()==6)
+	{
+		const QMat M = getTransformationMatrix(destId, origId);
+		const QVec a = (M * initVec.subVector(0,2).toHomogeneousCoordinates()).fromHomogeneousCoordinates();
+		const Rot3D R(initVec(3), initVec(4), initVec(5));
+		const QVec b = (M.getSubmatrix(0,2,0,2)*R).extractAnglesR_min();
+		QVec ret(6);
+		ret(0) = a(0);
+		ret(1) = a(1);
+		ret(2) = a(2);
+		ret(3) = b(0);
+		ret(4) = b(1);
+		ret(5) = b(2);
+		return ret;
 	}
 	else
 	{
-		setLists(from, to);
-		foreach (InnerModelNode *i, listA)
-		{
-			ret = ((RTMat)(*i)).operator*(ret);
-		}
-		foreach (InnerModelNode *i, listB)
-		{
-			ret = i->invert() * ret;
-		}
-		localHashTr[QPair<QString, QString>(to, from)] = ret;
+		throw InnerModelException("InnerModel::transform was called with an unsupported vector size.");
 	}
-	return RTMat(ret);
-} */
+}
 
-void SpecificWorker::setLists(const std::uint32_t origId, const std::uint32_t destId)
+RTMat SpecificWorker::getTransformationMatrix(const std::uint32_t &to, const std::uint32_t &from)
+{
+	RTMat ret;
+
+	// if (localHashTr.contains(QPair<QString, QString>(to, from)))
+	// {
+	// 	ret = localHashTr[QPair<QString, QString>(to, from)];
+	// }
+	// else
+	// {
+		setLists(from, to);
+		for (auto to = listA.begin(); to != std::prev(listA.end()); ++to)
+		{
+			//ret = ((RTMat)(*i)).operator*(ret);
+			//std::cout << "List A id " << *to << std::endl;
+			ret = graph->edgeAttrib<RMat::RTMat>(*(std::next(to,1)), *to, "RT") * ret;
+		}
+		for (auto from = listB.begin(); from != std::prev(listB.end()); ++from)
+		{
+			//ret = i->invert() * ret;
+			ret = graph->edgeAttrib<RMat::RTMat>(*from, *(std::next(from)), "RT").invert() * ret;
+			//std::cout << "List B id " << *from << std::endl;
+		}
+		//localHashTr[QPair<QString, QString>(to, from)] = ret;
+	// }
+	return ret;
+} 
+ 
+void SpecificWorker::setLists(const std::uint32_t &origId, const std::uint32_t &destId)
 {
 	//InnerModelNode *a = hash[origId], *b = hash[destId];
 	auto a = origId;
@@ -403,6 +438,6 @@ void SpecificWorker::setLists(const std::uint32_t origId, const std::uint32_t de
 	for(auto a : listA)
 		std::cout << "list A " << a << std::endl;
 	for(auto a : listB)
-		std::cout << "list A " << a << std::endl;
+		std::cout << "list B " << a << std::endl;
 		
 }

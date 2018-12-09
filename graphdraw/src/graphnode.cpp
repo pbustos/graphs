@@ -153,7 +153,7 @@ void GraphNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 QVariant GraphNode::itemChange(GraphicsItemChange change, const QVariant &value)
 {
     switch (change) 
-		{
+	{
     case ItemPositionHasChanged:
         foreach (GraphEdge *edge, edgeList)
             edge->adjust();

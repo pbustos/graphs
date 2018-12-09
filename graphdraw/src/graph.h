@@ -31,8 +31,8 @@ template<class... Ts> overload(Ts...) -> overload<Ts...>;
 
 namespace DSR
 {
-	using mtypes = std::variant<std::uint32_t, std::int32_t, float, std::string, std::vector<float>, RMat::RTMat>;		
-	using Attribs = std::unordered_map<std::string, mtypes>;
+	using MTypes = std::variant<std::uint32_t, std::int32_t, float, std::string, std::vector<float>, RMat::RTMat>;		
+	using Attribs = std::unordered_map<std::string, MTypes>;
 	using DrawAttribs = std::unordered_map<std::string, std::any>;
 	struct EdgeAttrs
 	{ 
@@ -74,13 +74,13 @@ namespace DSR
 			//API 
 			////////////
 			
-			typename Nodes::iterator begin() 								{ return nodes.begin(); };
-			typename Nodes::iterator end() 									{ return nodes.end();   };
-			typename Nodes::const_iterator begin() const  	{ return nodes.begin(); };
+			typename Nodes::iterator begin() 					{ return nodes.begin(); };
+			typename Nodes::iterator end() 						{ return nodes.end();   };
+			typename Nodes::const_iterator begin() const  		{ return nodes.begin(); };
 			typename Nodes::const_iterator end() const 	 		{ return nodes.begin(); };
 			
-			size_t size() const 														{ return nodes.size();  };
-			void addNode(std::uint32_t id) 									{ nodes.insert(std::pair(id, Value()));};
+			size_t size() const 								{ return nodes.size();  };
+			void addNode(std::uint32_t id) 						{ nodes.insert(std::pair(id, Value()));};
 			void addEdge(std::uint32_t from, std::uint32_t to) 			
 			{ 
 				nodes[from].fanout.insert(std::pair(to, EdgeAttrs()));
@@ -109,12 +109,20 @@ namespace DSR
 						edgeAtts.draw_attrs.insert_or_assign(k,v);
 			};
 
-			void printVisitor(const mtypes &t)
+			std::string printVisitor(const MTypes &t)
 			{			
-				std::visit(overload
+				return std::visit(overload
 				{
-    				[](RTMat m) { m.print("");},
-    				[](auto a) { std::cout << a; }
+    				[](RTMat m) -> std::string				{ return m.asQString("RT").toStdString(); },
+    				[](std::vector<float> a)-> std::string	
+					{ 
+						std::string str;
+						for(auto &f : a)
+							str += std::to_string(f) + " ";
+						return  str += "\n"; 
+					},
+					[](std::string a) -> std::string		{ return  a; },
+					[](auto a) -> std::string				{ return std::to_string(a);} 
 				}, t);
     		};
 
@@ -127,17 +135,16 @@ namespace DSR
 					std::cout << "	attrs:	";
 					for( auto &[ka, kv] : v.attrs)
 					{
-						std::cout << ka << " -> "; printVisitor(kv); std::cout << " , ";
+						std::cout << ka << " -> " << printVisitor(kv)  << " , ";
 					}
 					std::cout << std::endl << "	edges:	";
 					for( auto &[kf,vf] : v.fanout)
 					{
-						//std::cout << attr<std::string>(vf.attrs["name"]) << "( " << attr<std::string>(nodes[kf].attrs["name"]) << " ) " << std::endl;
-						printVisitor(vf.attrs["name"]); std::cout << "( " ; printVisitor(nodes[kf].attrs["name"]); std::cout << " ) " << std::endl;
+						std::cout << printVisitor(vf.attrs["name"]) << "( " << printVisitor(nodes[kf].attrs["name"]) << " ) " << std::endl;
 						std::cout << "			edge attrs: ";
 						for( auto &[ke, ve] : vf.attrs)
 						{
-							std::cout << ke << " -> " ; printVisitor(ve); std::cout << " , ";
+							std::cout << ke << " -> " << printVisitor(ve) << " , ";
 						}
 						std::cout << std::endl << "		";
 					}
@@ -152,18 +159,28 @@ namespace DSR
 			//Value& node(std::uint32_t id)  	 				{ return nodes.at(id); };
 			FanOut fanout(std::uint32_t id) const   			{ return nodes.at(id).fanout;};
 			FanOut& fanout(std::uint32_t id)            		{ return nodes.at(id).fanout;};
-			FanIn fanin(const Value &v) const    				{ return v.fanin;};
-			FanIn& fanin(Value &v)                				{ return v.fanin;};
-			Attribs attrs(const Value &v) const   	 			{ return v.attrs;};
-			Attribs& attrs(Value &v)              				{ return v.attrs;};
+			FanIn fanin(std::uint32_t id) const    				{ return nodes.at(id).fanin;};
+			FanIn& fanin(std::uint32_t id)                		{ return nodes.at(id).fanin;};
+			template <typename Ta> 
+			Ta edgeAttrib(std::uint32_t from, std::uint32_t to, const std::string &tag) const 	
+			{ 	auto &attrs = nodes.at(from).fanout.at(to).attrs;
+				if(attrs.count(tag) > 0)
+					return std::get<Ta>(attrs.at(tag));
+				else return Ta();
+			};
+			Attribs attrs(std::uint32_t id) const  	 			{ return nodes.at(id).attrs;};
+			Attribs& attrs(std::uint32_t id)       				{ return nodes.at(id).attrs;};
 			DrawAttribs nodeDrawAttrs(std::uint32_t id) const	{ return nodes.at(id).draw_attrs;};
 			DrawAttribs& nodeDrawAttrs(std::uint32_t id)      	{ return nodes.at(id).draw_attrs;};
-		
+			Attribs& edgeAttrs(std::uint32_t from, std::uint32_t to) 		{ return nodes.at(from).fanout.at(to).attrs;};
+			Attribs edgeAttrs(std::uint32_t from,  std::uint32_t to) const	{ return nodes.at(from).fanout.at(to).attrs;};
+			
+
 			template<typename T>
 			T attr(const std::any &s) const     			{ return std::any_cast<T>(s);};
 
 			template<typename T>
-			T attr(const mtypes &s) const    	 			{ return std::get<T>(s);};
+			T attr(const MTypes &s) const    	 			{ return std::get<T>(s);};
 			
 
 			bool nodeExists(std::uint32_t id) const			{ return nodes.count(id) > 0;}
@@ -183,3 +200,16 @@ namespace DSR
 	};
 }
 #endif // GRAPH_H
+
+
+
+
+//FUSCA
+	// template <typename Ta> 
+	// 		Ta attribFanin(std::uint32_t to, const std::string &tag) const 	
+	// 		{ 	auto &fin = nodes.at(to).fanin;
+	// 			auto edge = std::find_if(fin.begin(), fin.end(), [to, tag, this](auto from){ return edgeAttrs(from, to).count(tag)>0;});
+	// 			if(edge != fin.end())
+	// 				return std::get<Ta>(edgeAttrs(*edge,to).at(tag));
+	// 			else return Ta();
+	// 		};

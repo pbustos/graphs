@@ -33,7 +33,7 @@ class GraphViewer : public QGraphicsView
 {
 	public:
 		GraphViewer();
-    void setGraph(std::shared_ptr<DSR::Graph> graph_,  QScrollArea *scrollArea);
+  		void setGraph(std::shared_ptr<DSR::Graph> graph_,  QScrollArea *scrollArea);
 		void draw();
 // 		void applyForces(std::shared_ptr<Graph> g);
 // 		void applyForces2(std::shared_ptr<Graph> g);
@@ -54,7 +54,7 @@ class GraphViewer : public QGraphicsView
 		QGraphicsItem *pressed_item;
 		
 		int timerId;
-    GraphNode *centerNode;
+    	GraphNode *centerNode;
 		
 	public slots:
 	

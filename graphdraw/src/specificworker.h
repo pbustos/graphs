@@ -79,8 +79,9 @@ public slots:
 
 	void walkTree(InnerModelNode *node);
 	void innerModelTreeWalk(std::uint32_t id);
-	void setLists(const std::uint32_t origId, const std::uint32_t destId);
-
+	void setLists(const std::uint32_t &origId, const std::uint32_t &destId);
+	RMat::RTMat getTransformationMatrix(const std::uint32_t &to, const std::uint32_t &from);
+	RMat::QVec transform(const std::uint32_t &destId, const QVec &initVec, const std::uint32_t &origId);
 
 private:
 	InnerModel *innerModel;
