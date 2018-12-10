@@ -17,6 +17,14 @@
  *    along with RoboComp.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "specificworker.h"
+#include <QDesktopWidget>
+#include <QXmlSimpleReader>
+#include <QXmlInputSource>
+#include <QXmlDefaultHandler>
+#include <QGLViewer/qglviewer.h>
+#include <QGraphicsEllipseItem>
+#include <cppitertools/range.hpp>
+
 
 /**
 * \brief Default constructor
@@ -304,16 +312,13 @@ void SpecificWorker::initialize(int period)
 	//graph_viewer.show();	
 	std::cout << __FILE__ << __FUNCTION__ << " -- Graph shown OK" << std::endl;
 
-	graph->innerModelTreeWalk(100);
-	auto r = graph->transform(20, QVec::zeros(3), 23);
-	r.print("Target coordinates");
-	r = graph->transform(5, QVec::zeros(3), 1);
-	r.print("Target coordinates");
-	r = graph->transform(5, QVec::zeros(3), 100);
-	r.print("Target coordinates");
-	
+	innerapi.setGraph(graph);
+
+	innerapi.innerModelTreeWalk(100);
+	auto r = innerapi.transform(20, QVec::zeros(3), 23);
+	r.print("Target coordinates from 0, 0, 0");
 	std::cout << "updatetransformvalues" << std::endl;
-	graph->updateTransformValues(1, 20, 30, 40, 50, 60, 70);
+	innerapi.updateTransformValues(1, 20, 30, 40, 50, 60, 70);
 
 	this->Period = 100;
 	timer.start(Period);  

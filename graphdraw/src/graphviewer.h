@@ -53,7 +53,7 @@ class GraphViewer : public QGraphicsView
 		int m_originX, m_originY;
 		QGraphicsItem *pressed_item;
 		
-		int timerId;
+		int timerId = -1;
     	GraphNode *centerNode;
 		
 	public slots:

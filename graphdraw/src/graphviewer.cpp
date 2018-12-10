@@ -99,16 +99,16 @@ void GraphViewer::draw()
 
 void GraphViewer::itemMoved()
 {
-	std::cout << "timerId " << timerId << std::endl;
-    if (!timerId)
-        timerId = startTimer(1000 / 25);
+	//std::cout << "timerId " << timerId << std::endl;
+    // if (timerId == -1)
+    //    timerId = startTimer(1000 / 25);
 }
 
 void GraphViewer::timerEvent(QTimerEvent *event)
 {
     //Q_UNUSED(event);
 
-	std::cout << "gola"  << std::endl;
+	//std::cout << "gola"  << std::endl;
 
     QList<GraphNode *> nodes;
     foreach (QGraphicsItem *item, scene.items()) 
