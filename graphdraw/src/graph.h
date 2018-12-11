@@ -178,7 +178,7 @@ namespace DSR
     		};
 			IDType getNodeLevel(IDType id)  										{ return std::get<IDType>(this->attrs(id)["level"]); };
         	IDType getParent(IDType id)   											{ return std::get<IDType>(this->attrs(id)["parent"]); };
-			
+			IDType getNodeByIMName(const std::string &key, const std::string &value){ };
 			
 
 		private:

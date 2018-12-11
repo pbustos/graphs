@@ -28,6 +28,8 @@
 #include "graph.h"
 
 using DSR::IDType;
+using IMType = QString;
+
 class InnerModelAPI 
 {
 	public:	
@@ -39,7 +41,7 @@ class InnerModelAPI
         // ///////////////////////////////////////////////////
         // void setRoot(InnerModelNode *node);
         // void cleanupTables();
-        void updateTransformValues(const IDType &transformId, float tx, float ty, float tz, float rx, float ry, float rz, const IDType &parentId = 0);
+        void updateTransformValues(const IMType &transformId, float tx, float ty, float tz, float rx, float ry, float rz, const IMType &parentId = 0);
         void innerModelTreeWalk(IDType);
 
         // ////////////////////////////////////////////

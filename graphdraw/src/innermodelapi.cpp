@@ -34,9 +34,9 @@ void InnerModelAPI::innerModelTreeWalk(std::uint32_t id)
 	} 
 }
 
-RMat::QVec InnerModelAPI::transform(const std::uint32_t &destId, const QVec &initVec, const std::uint32_t &origId)
+RMat::QVec InnerModelAPI::transform(const IMType &destId, const QVec &initVec, const std::uint32_t &origId)
 {
-	if (initVec.size()==3)
+    if (initVec.size()==3)
 	{
 		return (getTransformationMatrix(destId, origId) * initVec.toHomogeneousCoordinates()).fromHomogeneousCoordinates();
 	}
@@ -61,8 +61,12 @@ RMat::QVec InnerModelAPI::transform(const std::uint32_t &destId, const QVec &ini
 	// }
 }
 
-RMat::RTMat InnerModelAPI::getTransformationMatrix(const std::uint32_t &to, const std::uint32_t &from)
+RMat::RTMat InnerModelAPI::getTransformationMatrix(const IMType &to, const IMType &from)
 {
+    //search node with "imName" = destIp
+    auto to_id = graph->nodeByIMName("imName", to);
+    auto from_id = graph->nodeByIMName("imName", from);
+    
 	RMat::RTMat ret;
 
 	// if (localHashTr.contains(QPair<QString, QString>(to, from)))
@@ -71,17 +75,17 @@ RMat::RTMat InnerModelAPI::getTransformationMatrix(const std::uint32_t &to, cons
 	// }
 	// else
 	// {
-		auto [listA, listB] = setLists(from, to);
-		for (auto to = listA.begin(); to != std::prev(listA.end()); ++to)
+		auto [listA, listB] = setLists(from_id, to_id);
+		for (auto to_id = listA.begin(); to_id != std::prev(listA.end()); ++to_id)
 		{
 			//ret = ((RTMat)(*i)).operator*(ret);
 			//std::cout << "List A id " << *to << std::endl;
-			ret = graph->edgeAttrib<RMat::RTMat>(*(std::next(to,1)), *to, "RT") * ret;
+			ret = graph->edgeAttrib<RMat::RTMat>(*(std::next(to_id,1)), *to_id, "RT") * ret;
 		}
-		for (auto from = listB.begin(); from != std::prev(listB.end()); ++from)
+		for (auto from = listB.begin(); from != std::prev(listB.end()); ++from_id)
 		{
 			//ret = i->invert() * ret;
-			ret = graph->edgeAttrib<RMat::RTMat>(*from, *(std::next(from)), "RT").invert() * ret;
+			ret = graph->edgeAttrib<RMat::RTMat>(*from_id, *(std::next(from_id)), "RT").invert() * ret;
 			//std::cout << "List B id " << *from << std::endl;
 		}
 		//localHashTr[QPair<QString, QString>(to, from)] = ret;
