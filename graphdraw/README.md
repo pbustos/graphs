@@ -1,7 +1,13 @@
 ## IMPORTANT
 
-### This component requires the include-only library https://github.com/ryanhaining/cppitertools
+### This component requires 
+
+* the include-only library https://github.com/ryanhaining/cppitertools
 Clone it in /usr/local/include
+* sudo aptitude install libqglviewer-dev-qt5
+* sudo ln -s /usr/include/libxml /usr/include/libxml2/libxml/ 
+
+
 
 
 ## Configuration parameters
