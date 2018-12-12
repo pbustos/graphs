@@ -1,7 +1,7 @@
 [
     { 
-        "key": "F12",
-        "command": "make",
+        "key": "F8",
+        "command": "Make",
         "when": "editorTectFocus"
      }
 ]

@@ -19,16 +19,16 @@
 // 													InnerModel API
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 #ifndef INNERMODELAPI_H
 #define INNERMODELAPI_H
 
 #include <iostream>
 #include <qmat/QMatAll>
+
 #include "graph.h"
 
 using DSR::IDType;
-using IMType = QString;
+using DSR::IMType;
 
 class InnerModelAPI 
 {
@@ -41,8 +41,9 @@ class InnerModelAPI
         // ///////////////////////////////////////////////////
         // void setRoot(InnerModelNode *node);
         // void cleanupTables();
-        void updateTransformValues(const IMType &transformId, float tx, float ty, float tz, float rx, float ry, float rz, const IMType &parentId = 0);
-        void innerModelTreeWalk(IDType);
+        void updateTransformValues(const IMType &transformId_, float tx, float ty, float tz, float rx, float ry, float rz, const IMType &parentId_ = 0);
+        void innerModelTreeWalk(const IMType &id);
+        void innerModelTreeWalk(const IDType &id);
 
         // ////////////////////////////////////////////
         // /// Transformation matrix retrieval methods
@@ -50,8 +51,9 @@ class InnerModelAPI
         using ABLists = std::tuple< std::list<IDType>, std::list<IDType>>;
 
         ABLists setLists(const IDType &origId, const IDType &destId);
-        RMat::RTMat getTransformationMatrix(const IDType &to, const IDType &from);
-        RMat::QVec transform(const IDType &destId, const QVec &initVec, const IDType &origId);
+        RTMat getTransformationMatrix(const IMType &to_, const IMType &from_);
+        RTMat getTransformationMatrix(const IDType &to_, const IDType &from_);
+        QVec transform(const IMType &destId, const QVec &initVec, const IMType &origId);
         //RTMat getTransformationMatrix(const QString &destId, const QString &origId);
         // RTMat getTransformationMatrixS(const std::string &destId, const std::string &origId);
         // QMat getRotationMatrixTo(const QString &to, const QString &from);

@@ -31,7 +31,9 @@ template<class... Ts> overload(Ts...) -> overload<Ts...>;
 
 namespace DSR
 {
-	using IDType = std::uint32_t;
+	using IDType = std::int32_t;
+	using IMType = QString;
+
 	using MTypes = std::variant<std::uint32_t, std::int32_t, float, std::string, std::vector<float>, RMat::RTMat>;		
 	using Attribs = std::unordered_map<std::string, MTypes>;
 	using DrawAttribs = std::unordered_map<std::string, std::any>;
@@ -178,7 +180,14 @@ namespace DSR
     		};
 			IDType getNodeLevel(IDType id)  										{ return std::get<IDType>(this->attrs(id)["level"]); };
         	IDType getParent(IDType id)   											{ return std::get<IDType>(this->attrs(id)["parent"]); };
-			IDType getNodeByIMName(const std::string &key, const std::string &value){ };
+			IDType getNodeByInnerModelName(const std::string &key, const IMType tag)
+			{ 
+				// for(auto &[k, v] : nodes)
+				// 	if( attr<std::string>(v.attrs["name"]) == tag )
+				// 		return k;
+				// return -1;
+
+			};
 			
 
 		private:

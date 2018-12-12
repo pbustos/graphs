@@ -18,9 +18,14 @@
 
 using namespace DSR;
 
-void InnerModelAPI::innerModelTreeWalk(std::uint32_t id)
+void InnerModelAPI::innerModelTreeWalk(const IMType &id)
+{
+	 innerModelTreeWalk(graph->getNodeByInnerModelName("imName", id));
+}
+void InnerModelAPI::innerModelTreeWalk(const IDType &id)
 {
 	//std::cout << "id: " << id << std::endl;
+
 	if (graph->nodeExists(id) == false)
 	{
 		std::cout << __FUNCTION__ << "Non existing node: " << id << std::endl;
@@ -34,7 +39,7 @@ void InnerModelAPI::innerModelTreeWalk(std::uint32_t id)
 	} 
 }
 
-RMat::QVec InnerModelAPI::transform(const IMType &destId, const QVec &initVec, const std::uint32_t &origId)
+RMat::QVec InnerModelAPI::transform(const IMType &destId, const QVec &initVec, const IMType &origId)
 {
     if (initVec.size()==3)
 	{
@@ -61,11 +66,11 @@ RMat::QVec InnerModelAPI::transform(const IMType &destId, const QVec &initVec, c
 	// }
 }
 
-RMat::RTMat InnerModelAPI::getTransformationMatrix(const IMType &to, const IMType &from)
+RMat::RTMat InnerModelAPI::getTransformationMatrix(const IMType &to_, const IMType &from_)
 {
     //search node with "imName" = destIp
-    auto to_id = graph->nodeByIMName("imName", to);
-    auto from_id = graph->nodeByIMName("imName", from);
+    auto to = graph->getNodeByInnerModelName("imName", to_);
+    auto from = graph->getNodeByInnerModelName("imName", from_);
     
 	RMat::RTMat ret;
 
@@ -75,17 +80,17 @@ RMat::RTMat InnerModelAPI::getTransformationMatrix(const IMType &to, const IMTyp
 	// }
 	// else
 	// {
-		auto [listA, listB] = setLists(from_id, to_id);
-		for (auto to_id = listA.begin(); to_id != std::prev(listA.end()); ++to_id)
+		auto [listA, listB] = setLists(from, to);
+		for (auto to = listA.begin(); to != std::prev(listA.end()); ++to)
 		{
 			//ret = ((RTMat)(*i)).operator*(ret);
 			//std::cout << "List A id " << *to << std::endl;
-			ret = graph->edgeAttrib<RMat::RTMat>(*(std::next(to_id,1)), *to_id, "RT") * ret;
+			ret = graph->edgeAttrib<RMat::RTMat>(*(std::next(to,1)), *to, "RT") * ret;
 		}
-		for (auto from = listB.begin(); from != std::prev(listB.end()); ++from_id)
+		for (auto from = listB.begin(); from != std::prev(listB.end()); ++from)
 		{
 			//ret = i->invert() * ret;
-			ret = graph->edgeAttrib<RMat::RTMat>(*from_id, *(std::next(from_id)), "RT").invert() * ret;
+			ret = graph->edgeAttrib<RMat::RTMat>(*from, *(std::next(from)), "RT").invert() * ret;
 			//std::cout << "List B id " << *from << std::endl;
 		}
 		//localHashTr[QPair<QString, QString>(to, from)] = ret;
@@ -93,10 +98,21 @@ RMat::RTMat InnerModelAPI::getTransformationMatrix(const IMType &to, const IMTyp
 	return ret;
 } 
  
-InnerModelAPI::ABLists InnerModelAPI::setLists(const std::uint32_t &origId, const std::uint32_t &destId)
+
+RMat::RTMat InnerModelAPI::getTransformationMatrix(const IDType &to_, const IDType &from_)
+{
+    //search node with "imName" = destIp
+    auto to = graph->getNodeByInnerModelName("imName", to_);
+    auto from = graph->getNodeByInnerModelName("imName", from_);
+    
+	return getTransformationMatrix(to, from);
+	
+} 
+
+InnerModelAPI::ABLists InnerModelAPI::setLists(const IDType &origId, const IDType &destId)
 {
 	//InnerModelNode *a = hash[origId], *b = hash[destId];
-    std::list<std::uint32_t> listA, listB;
+    std::list<IDType> listA, listB;
 	auto a = origId;
 	auto b = destId;
 	
@@ -145,10 +161,13 @@ InnerModelAPI::ABLists InnerModelAPI::setLists(const std::uint32_t &origId, cons
 ///// Tree update methods
 /////////////////////////////////////////////////////
 
-void InnerModelAPI::updateTransformValues(const std::uint32_t &transformId, float tx, float ty, float tz, float rx, float ry, float rz, const std::uint32_t &parentId)
+void InnerModelAPI::updateTransformValues(const IMType &transformId_, float tx, float ty, float tz, float rx, float ry, float rz, const IMType &parentId_)
 {	
 //	cleanupTables();
 //	InnerModelTransform *aux = dynamic_cast<InnerModelTransform *>(hash[transformId]);
+    auto transformId = graph->getNodeByInnerModelName("imName", transformId_);
+    auto parentId = graph->getNodeByInnerModelName("imName", parentId_);
+
 	if(graph->nodeExists(transformId) and graph->nodeHasAttrib<std::string>(transformId, "imType", "transform"))
 	{
 		if(parentId != 0)

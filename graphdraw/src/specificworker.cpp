@@ -314,11 +314,11 @@ void SpecificWorker::initialize(int period)
 
 	innerapi.setGraph(graph);
 
-	innerapi.innerModelTreeWalk(100);
-	auto r = innerapi.transform(20, QVec::zeros(3), 23);
+	innerapi.innerModelTreeWalk("world");
+	auto r = innerapi.transform("robot", QVec::zeros(3), "tableA");
 	r.print("Target coordinates from 0, 0, 0");
 	std::cout << "updatetransformvalues" << std::endl;
-	innerapi.updateTransformValues(1, 20, 30, 40, 50, 60, 70);
+	innerapi.updateTransformValues("robot", 20, 30, 40, 50, 60, 70);
 
 	this->Period = 100;
 	timer.start(Period);  
