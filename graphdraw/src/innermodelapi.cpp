@@ -20,7 +20,9 @@ using namespace DSR;
 
 void InnerModelAPI::innerModelTreeWalk(const IMType &id)
 {
-	 innerModelTreeWalk(graph->getNodeByInnerModelName("imName", id));
+	auto r = graph->getNodeByInnerModelName("imName", id);
+	std::cout << "ID " << r << std::endl;
+	innerModelTreeWalk(r);
 }
 void InnerModelAPI::innerModelTreeWalk(const IDType &id)
 {
@@ -31,7 +33,7 @@ void InnerModelAPI::innerModelTreeWalk(const IDType &id)
 		std::cout << __FUNCTION__ << "Non existing node: " << id << std::endl;
 		return;
 	}
-	
+	std::cout << "node: " << id << std::endl;
 	for(auto &child_id : graph->edgesByLabel(id, "RT")) 
 	{
 		innerModelTreeWalk(child_id);
@@ -66,11 +68,8 @@ RMat::QVec InnerModelAPI::transform(const IMType &destId, const QVec &initVec, c
 	// }
 }
 
-RMat::RTMat InnerModelAPI::getTransformationMatrix(const IMType &to_, const IMType &from_)
+RMat::RTMat InnerModelAPI::getTransformationMatrix(const IDType &to, const IDType &from)
 {
-    //search node with "imName" = destIp
-    auto to = graph->getNodeByInnerModelName("imName", to_);
-    auto from = graph->getNodeByInnerModelName("imName", from_);
     
 	RMat::RTMat ret;
 
@@ -84,14 +83,14 @@ RMat::RTMat InnerModelAPI::getTransformationMatrix(const IMType &to_, const IMTy
 		for (auto to = listA.begin(); to != std::prev(listA.end()); ++to)
 		{
 			//ret = ((RTMat)(*i)).operator*(ret);
-			//std::cout << "List A id " << *to << std::endl;
+			std::cout << "List A id " << *to << std::endl;
 			ret = graph->edgeAttrib<RMat::RTMat>(*(std::next(to,1)), *to, "RT") * ret;
 		}
 		for (auto from = listB.begin(); from != std::prev(listB.end()); ++from)
 		{
 			//ret = i->invert() * ret;
 			ret = graph->edgeAttrib<RMat::RTMat>(*from, *(std::next(from)), "RT").invert() * ret;
-			//std::cout << "List B id " << *from << std::endl;
+			std::cout << "List B id " << *from << std::endl;
 		}
 		//localHashTr[QPair<QString, QString>(to, from)] = ret;
 	// }
@@ -99,12 +98,12 @@ RMat::RTMat InnerModelAPI::getTransformationMatrix(const IMType &to_, const IMTy
 } 
  
 
-RMat::RTMat InnerModelAPI::getTransformationMatrix(const IDType &to_, const IDType &from_)
+RMat::RTMat InnerModelAPI::getTransformationMatrix(const IMType &to_, const IMType &from_)
 {
     //search node with "imName" = destIp
     auto to = graph->getNodeByInnerModelName("imName", to_);
     auto from = graph->getNodeByInnerModelName("imName", from_);
-    
+	
 	return getTransformationMatrix(to, from);
 	
 } 
@@ -113,18 +112,20 @@ InnerModelAPI::ABLists InnerModelAPI::setLists(const IDType &origId, const IDTyp
 {
 	//InnerModelNode *a = hash[origId], *b = hash[destId];
     std::list<IDType> listA, listB;
-	auto a = origId;
-	auto b = destId;
+	IDType a = origId;
+	IDType b = destId;
+	
 	
 /* 	if (!a)
 		throw InnerModelException("Cannot find node: \""+ origId.toStdString()+"\"");
 	if (!b)
 		throw InnerModelException("Cannot find node: "+ destId.toStdString()+"\"");
  */
-	std::uint32_t a_level = graph->getNodeLevel(origId);
-	std::uint32_t b_level = graph->getNodeLevel(destId);
-	std::uint32_t min_level = std::min(a_level,b_level);
-	
+	std::int32_t a_level = graph->getNodeLevel(origId);
+	std::int32_t b_level = graph->getNodeLevel(destId);
+	std::int32_t min_level = std::min(a_level,b_level);
+	 
+	//std::cout << "caca " << a_level << " " << b_level << " " << min_level << std::endl;
 	listA.clear();
 	while (a_level >= min_level)
 	{
@@ -133,7 +134,7 @@ InnerModelAPI::ABLists InnerModelAPI::setLists(const IDType &origId, const IDTyp
 			break;
 		a = graph->getParent(a);
 	}
-
+	//std::cout << "caca2 "  << std::endl;
 	listB.clear();
 	while (b_level >= min_level)
 	{
@@ -142,6 +143,7 @@ InnerModelAPI::ABLists InnerModelAPI::setLists(const IDType &origId, const IDTyp
 			break;
 		b = graph->getParent(b);
 	}
+	//std::cout << "caca3 " << std::endl;
 	while (b != a)
 	{
 		listA.push_back(a);

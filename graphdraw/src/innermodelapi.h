@@ -52,7 +52,7 @@ class InnerModelAPI
 
         ABLists setLists(const IDType &origId, const IDType &destId);
         RTMat getTransformationMatrix(const IMType &to_, const IMType &from_);
-        RTMat getTransformationMatrix(const IDType &to_, const IDType &from_);
+        RTMat getTransformationMatrix(const IDType &to, const IDType &from);
         QVec transform(const IMType &destId, const QVec &initVec, const IMType &origId);
         //RTMat getTransformationMatrix(const QString &destId, const QString &origId);
         // RTMat getTransformationMatrixS(const std::string &destId, const std::string &origId);

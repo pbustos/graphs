@@ -182,11 +182,10 @@ namespace DSR
         	IDType getParent(IDType id)   											{ return std::get<IDType>(this->attrs(id)["parent"]); };
 			IDType getNodeByInnerModelName(const std::string &key, const IMType tag)
 			{ 
-				// for(auto &[k, v] : nodes)
-				// 	if( attr<std::string>(v.attrs["name"]) == tag )
-				// 		return k;
-				// return -1;
-
+				for(auto &[k, v] : nodes)
+					if( attr<std::string>(v.attrs["imName"]) == tag.toStdString() )
+						return k;
+				return 0;
 			};
 			
 
