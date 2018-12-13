@@ -162,14 +162,14 @@ void SpecificWorker::initializeXML(std::string file_name)
 			xmlChar *sid = xmlGetProp(cur, (const xmlChar *)"id");
 			
 			//AGMModelSymbol::SPtr s = newSymbol(atoi((char *)sid), (char *)stype);
-			std::uint32_t node_id = std::atoi((char *)sid);
+			IDType node_id = std::atoi((char *)sid);
 			graph->addNode(node_id);
 			std::string node_type((char *)stype);
 			graph->addNodeAttribs(node_id, DSR::Attribs{ 
 								std::pair("name", node_type), 
 								std::pair("type", node_type),
-								std::pair("level", std::uint32_t(0)),
-								std::pair("parent", std::uint32_t(0))
+								std::pair("level", std::int32_t(0)),
+								std::pair("parent", IDType(0))
 				});
 	
 			// Draw attributes come now
@@ -226,12 +226,12 @@ void SpecificWorker::initializeXML(std::string file_name)
 		{
 			xmlChar *srcn = xmlGetProp(cur, (const xmlChar *)"src");
 			if (srcn == NULL) { printf("Link %s lacks of attribute 'src'.\n", (char *)cur->name); exit(-1); }
-			std::uint32_t a = atoi((char *)srcn);
+			IDType a = atoi((char *)srcn);
 			xmlFree(srcn);
 
 			xmlChar *dstn = xmlGetProp(cur, (const xmlChar *)"dst");
 			if (dstn == NULL) { printf("Link %s lacks of attribute 'dst'.\n", (char *)cur->name); exit(-1); }
-			std::uint32_t b = atoi((char *)dstn);
+			IDType b = atoi((char *)dstn);
 			xmlFree(dstn);
 
 			xmlChar *label = xmlGetProp(cur, (const xmlChar *)"label");
@@ -312,13 +312,18 @@ void SpecificWorker::initialize(int period)
 	//graph_viewer.show();	
 	std::cout << __FILE__ << __FUNCTION__ << " -- Graph shown OK" << std::endl;
 
+	std::cout << __FILE__ << __FUNCTION__ << " -- Iniializing  innerAPI" << std::endl;
 	innerapi.setGraph(graph);
+	
+	std::cout << __FILE__ << __FUNCTION__ << " -- TEST treewalk" << std::endl;
+	innerapi.innerModelTreeWalk("world");
 
-	innerapi.innerModelTreeWalk(100);
-	auto r = innerapi.transform(20, QVec::zeros(3), 23);
+	std::cout << __FILE__ << __FUNCTION__ << " -- TESTS transform" << std::endl;
+	auto r = innerapi.transform("robot", QVec::zeros(3), "tableA");
 	r.print("Target coordinates from 0, 0, 0");
-	std::cout << "updatetransformvalues" << std::endl;
-	innerapi.updateTransformValues(1, 20, 30, 40, 50, 60, 70);
+	
+	std::cout << __FILE__ << __FUNCTION__ << " -- TESTS updatetransformvalues " << std::endl;
+	innerapi.updateTransformValues("robot", 20, 30, 40, 50, 60, 70);
 
 	this->Period = 100;
 	timer.start(Period);  

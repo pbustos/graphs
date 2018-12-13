@@ -31,6 +31,12 @@ template<class... Ts> overload(Ts...) -> overload<Ts...>;
 
 namespace DSR
 {
+<<<<<<< HEAD
+=======
+	using IDType = std::int32_t;
+	using IMType = QString;
+
+>>>>>>> 64f3b8579ad159af780ea4976dce0b5ec9b909eb
 	using MTypes = std::variant<std::uint32_t, std::int32_t, float, std::string, std::vector<float>, RMat::RTMat>;		
 	using Attribs = std::unordered_map<std::string, MTypes>;
 	using DrawAttribs = std::unordered_map<std::string, std::any>;
@@ -176,6 +182,7 @@ namespace DSR
 						keys.push_back(k);
 				return keys;
     		};
+<<<<<<< HEAD
 			
 			///////////////////////////////////////////////////////////////////////////////////////////////////////////
 			// 													InnerModel API
@@ -202,6 +209,17 @@ namespace DSR
 			// QMat getRotationMatrixTo(const QString &to, const QString &from);
 			// QVec getTranslationVectorTo(const QString &to, const QString &from);
 			// QVec rotationAngles(const QString & destId, const QString & origId);
+=======
+			std::int32_t getNodeLevel(IDType id)  									{ return std::get<IDType>(this->attrs(id)["level"]); };
+        	IDType getParent(IDType id)   											{ return std::get<IDType>(this->attrs(id)["parent"]); };
+			IDType getNodeByInnerModelName(const std::string &key, const std::string &tag)
+			{ 
+				for(auto &[k, v] : nodes)
+					if( attr<std::string>(v.attrs["imName"]) == tag )
+						return k;
+				return 0;
+			};
+>>>>>>> 64f3b8579ad159af780ea4976dce0b5ec9b909eb
 			
 			// ////////////////////////////////////////////
 			// /// Editing

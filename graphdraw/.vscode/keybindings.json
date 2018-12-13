@@ -1,7 +1,0 @@
-[
-    { 
-        "key": "F12",
-        "command": "make",
-        "when": "editorTectFocus"
-     }
-]
