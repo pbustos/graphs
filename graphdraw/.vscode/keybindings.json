@@ -1,7 +1,0 @@
-[
-    { 
-        "key": "F8",
-        "command": "Make",
-        "when": "editorTectFocus"
-     }
-]

@@ -178,12 +178,12 @@ namespace DSR
 						keys.push_back(k);
 				return keys;
     		};
-			IDType getNodeLevel(IDType id)  										{ return std::get<IDType>(this->attrs(id)["level"]); };
+			std::int32_t getNodeLevel(IDType id)  									{ return std::get<IDType>(this->attrs(id)["level"]); };
         	IDType getParent(IDType id)   											{ return std::get<IDType>(this->attrs(id)["parent"]); };
-			IDType getNodeByInnerModelName(const std::string &key, const IMType tag)
+			IDType getNodeByInnerModelName(const std::string &key, const std::string &tag)
 			{ 
 				for(auto &[k, v] : nodes)
-					if( attr<std::string>(v.attrs["imName"]) == tag.toStdString() )
+					if( attr<std::string>(v.attrs["imName"]) == tag )
 						return k;
 				return 0;
 			};

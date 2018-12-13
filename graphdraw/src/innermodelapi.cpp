@@ -20,7 +20,7 @@ using namespace DSR;
 
 void InnerModelAPI::innerModelTreeWalk(const IMType &id)
 {
-	auto r = graph->getNodeByInnerModelName("imName", id);
+	auto r = graph->getNodeByInnerModelName("imName", id.toStdString());
 	std::cout << "ID " << r << std::endl;
 	innerModelTreeWalk(r);
 }
@@ -97,16 +97,65 @@ RMat::RTMat InnerModelAPI::getTransformationMatrix(const IDType &to, const IDTyp
 	return ret;
 } 
  
-
 RMat::RTMat InnerModelAPI::getTransformationMatrix(const IMType &to_, const IMType &from_)
 {
-    //search node with "imName" = destIp
-    auto to = graph->getNodeByInnerModelName("imName", to_);
+    auto to = graph->getNodeByInnerModelName("imName", to_.toStdString());
+    auto from = graph->getNodeByInnerModelName("imName", from_.toStdString());
+	
+	return getTransformationMatrix(to, from);	
+} 
+
+ RTMat  InnerModelAPI::getTransformationMatrixS(const std::string &to_, const std::string &from_)
+ {
+	auto to = graph->getNodeByInnerModelName("imName", to_);
     auto from = graph->getNodeByInnerModelName("imName", from_);
 	
-	return getTransformationMatrix(to, from);
-	
-} 
+	getTransformationMatrix(to, from);
+ }
+
+QMat InnerModelAPI::getRotationMatrixTo(const IMType &to_, const IMType &from_)
+{
+	QMat rret = QMat::identity(3);
+
+	// if (localHashRot.contains(QPair<QString, QString>(to, from)))
+	// {
+	// 	rret = localHashRot[QPair<QString, QString>(to, from)];
+	// }
+	//else
+	//{
+		auto to = graph->getNodeByInnerModelName("imName", to_.toStdString());
+    	auto from = graph->getNodeByInnerModelName("imName", from_.toStdString());
+		
+		//InnerModelTransform *tf=NULL;
+		auto [listA, listB] = setLists(from, to);
+		for (auto to = listA.begin(); to != std::prev(listA.end()); ++to)
+		{
+			//ret = ((RTMat)(*i)).operator*(ret);
+			std::cout << "getRotationMatrix List A id " << *to << std::endl;
+			rret = graph->edgeAttrib<RMat::RTMat>(*(std::next(to,1)), *to, "RT").getR() * rret;
+		}
+		for (auto from = listB.begin(); from != std::prev(listB.end()); ++from)
+		{
+			//ret = i->invert() * ret;
+			std::cout << "getRotationMatrix List B id " << *from << std::endl;
+			rret = graph->edgeAttrib<RMat::RTMat>(*from, *(std::next(from)), "RT").getR().transpose() * rret;
+		}
+		//localHashRot[QPair<QString, QString>(to, from)] = rret;
+	//}
+	return rret;
+}
+
+QVec InnerModelAPI::getTranslationVectorTo(const IMType &to_, const IMType &from_)
+{
+	QMat m = this->getTransformationMatrix(to_, from_);
+	return m.getCol(3);
+}
+
+QVec InnerModelAPI::rotationAngles(const IMType & destId_, const IMType & origId_)
+{
+	return getTransformationMatrix(destId_, origId_).extractAnglesR();
+}
+       	
 
 InnerModelAPI::ABLists InnerModelAPI::setLists(const IDType &origId, const IDType &destId)
 {
@@ -114,7 +163,6 @@ InnerModelAPI::ABLists InnerModelAPI::setLists(const IDType &origId, const IDTyp
     std::list<IDType> listA, listB;
 	IDType a = origId;
 	IDType b = destId;
-	
 	
 /* 	if (!a)
 		throw InnerModelException("Cannot find node: \""+ origId.toStdString()+"\"");
@@ -167,8 +215,8 @@ void InnerModelAPI::updateTransformValues(const IMType &transformId_, float tx, 
 {	
 //	cleanupTables();
 //	InnerModelTransform *aux = dynamic_cast<InnerModelTransform *>(hash[transformId]);
-    auto transformId = graph->getNodeByInnerModelName("imName", transformId_);
-    auto parentId = graph->getNodeByInnerModelName("imName", parentId_);
+    auto transformId = graph->getNodeByInnerModelName("imName", transformId_.toStdString());
+    auto parentId = graph->getNodeByInnerModelName("imName", parentId_.toStdString());
 
 	if(graph->nodeExists(transformId) and graph->nodeHasAttrib<std::string>(transformId, "imType", "transform"))
 	{
