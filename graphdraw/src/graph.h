@@ -25,13 +25,12 @@
 #include <variant>
 #include <qmat/QMatAll>
 
-// Overload pattern used inprintVisitor
 template<class... Ts> struct overload : Ts... { using Ts::operator()...; };
 template<class... Ts> overload(Ts...) -> overload<Ts...>;
 
+
 namespace DSR
 {
-	using IDType = std::uint32_t;
 	using MTypes = std::variant<std::uint32_t, std::int32_t, float, std::string, std::vector<float>, RMat::RTMat>;		
 	using Attribs = std::unordered_map<std::string, MTypes>;
 	using DrawAttribs = std::unordered_map<std::string, std::any>;
@@ -40,8 +39,8 @@ namespace DSR
 		Attribs attrs; 
 		DrawAttribs draw_attrs;
 	};
-	using FanOut = std::unordered_map<IDType, EdgeAttrs>;
-	using FanIn = std::vector<IDType>;
+	using FanOut = std::unordered_map<std::uint32_t, EdgeAttrs>;
+	using FanIn = std::vector<std::uint32_t>;
 
 	class Graph 
 	{
@@ -53,7 +52,7 @@ namespace DSR
 				FanOut fanout;
 				FanIn fanin;
 			}; 
-			using Nodes = std::unordered_map<IDType, Value>;
+			using Nodes = std::unordered_map<std::uint32_t, Value>;
 			
 			////////////////////////////////////////////////////////////////////////////////////////////
 			//									Graph API 
@@ -65,29 +64,29 @@ namespace DSR
 			typename Nodes::const_iterator end() const 	 		{ return nodes.begin(); };
 			
 			size_t size() const 								{ return nodes.size();  };
-			void addNode(IDType id) 							{ nodes.insert(std::pair(id, Value()));};
-			void addEdge(IDType from, IDType to) 			
+			void addNode(std::uint32_t id) 						{ nodes.insert(std::pair(id, Value()));};
+			void addEdge(std::uint32_t from, std::uint32_t to) 			
 			{ 
 				nodes[from].fanout.insert(std::pair(to, EdgeAttrs()));
 				nodes[to].fanin.push_back(from);
 			};
-			void addNodeAttribs(IDType id, const Attribs &att)
+			void addNodeAttribs(std::uint32_t id, const Attribs &att)
 			{ 
 				for(auto &[k,v] : att)
 					nodes[id].attrs.insert_or_assign(k,v);
 			};
-			void addNodeDrawAttribs(IDType id, const DrawAttribs &att)
+			void addNodeDrawAttribs(std::uint32_t id, const DrawAttribs &att)
 			{ 
 				for(auto &[k,v] : att)
 					nodes[id].draw_attrs.insert_or_assign(k,v);
 			};
-			void addEdgeAttribs(IDType from, IDType to, const Attribs &att)
+			void addEdgeAttribs(std::uint32_t from, std::uint32_t to, const Attribs &att)
 			{ 
 					auto &edgeAtts = nodes[from].fanout.at(to);
 					for(auto &[k,v] : att)
 						edgeAtts.attrs.insert_or_assign(k,v);
 			};
-			void addEdgeDrawAttribs(IDType from, IDType to, const DrawAttribs &att)
+			void addEdgeDrawAttribs(std::uint32_t from, std::uint32_t to, const DrawAttribs &att)
 			{ 
 					auto &edgeAtts = nodes[from].fanout.at(to);
 					for(auto &[k,v] : att)
@@ -98,7 +97,7 @@ namespace DSR
 			{			
 				return std::visit(overload
 				{
-    				[](RTMat m) -> std::string										{ return m.asQString("RT").toStdString(); },
+    				[](RTMat m) -> std::string				{ return m.asQString("RT").toStdString(); },
     				[](std::vector<float> a)-> std::string	
 					{ 
 						std::string str;
@@ -106,8 +105,8 @@ namespace DSR
 							str += std::to_string(f) + " ";
 						return  str += "\n"; 
 					},
-					[](std::string a) -> std::string								{ return  a; },
-					[](auto a) -> std::string										{ return std::to_string(a);} 
+					[](std::string a) -> std::string		{ return  a; },
+					[](auto a) -> std::string				{ return std::to_string(a);} 
 				}, t);
     		};
 
@@ -138,51 +137,104 @@ namespace DSR
 				std::cout << "---------------- graph ends here --------------------------" << std::endl;
 			}
 			
-			FanOut fanout(IDType id) const   										{ return nodes.at(id).fanout;};
-			FanOut& fanout(IDType id)            									{ return nodes.at(id).fanout;};
-			FanIn fanin(IDType id) const    										{ return nodes.at(id).fanin;};
-			FanIn& fanin(IDType id)             				   					{ return nodes.at(id).fanin;};
-			template <typename Ta> Ta edgeAttrib(IDType from, IDType to, const std::string &tag) const 	
+			FanOut fanout(std::uint32_t id) const   			{ return nodes.at(id).fanout;};
+			FanOut& fanout(std::uint32_t id)            		{ return nodes.at(id).fanout;};
+			FanIn fanin(std::uint32_t id) const    				{ return nodes.at(id).fanin;};
+			FanIn& fanin(std::uint32_t id)                		{ return nodes.at(id).fanin;};
+			template <typename Ta> 
+			Ta edgeAttrib(std::uint32_t from, std::uint32_t to, const std::string &tag) const 	
 			{ 	auto &attrs = nodes.at(from).fanout.at(to).attrs;
 				if(attrs.count(tag) > 0)
 					return std::get<Ta>(attrs.at(tag));
 				else return Ta();
 			};
-			Attribs attrs(IDType id) const  	 									{ return nodes.at(id).attrs;};
-			Attribs& attrs(IDType id)       										{ return nodes.at(id).attrs;};
-			DrawAttribs nodeDrawAttrs(IDType id) const								{ return nodes.at(id).draw_attrs;};
-			DrawAttribs& nodeDrawAttrs(IDType id)      								{ return nodes.at(id).draw_attrs;};
-			Attribs& edgeAttrs(IDType from, IDType to) 								{ return nodes.at(from).fanout.at(to).attrs;};
-			Attribs edgeAttrs(IDType from,  IDType to) const						{ return nodes.at(from).fanout.at(to).attrs;};
+			Attribs attrs(std::uint32_t id) const  	 						{ return nodes.at(id).attrs;};
+			Attribs& attrs(std::uint32_t id)       							{ return nodes.at(id).attrs;};
+			DrawAttribs nodeDrawAttrs(std::uint32_t id) const				{ return nodes.at(id).draw_attrs;};
+			DrawAttribs& nodeDrawAttrs(std::uint32_t id)      				{ return nodes.at(id).draw_attrs;};
+			Attribs& edgeAttrs(std::uint32_t from, std::uint32_t to) 		{ return nodes.at(from).fanout.at(to).attrs;};
+			Attribs edgeAttrs(std::uint32_t from,  std::uint32_t to) const	{ return nodes.at(from).fanout.at(to).attrs;};
 			
 			template<typename Ta>
-			Ta attr(const std::any &s) const     									{ return std::any_cast<Ta>(s);};
+			Ta attr(const std::any &s) const     			{ return std::any_cast<Ta>(s);};
 
 			template<typename Ta>
-			Ta attr(const MTypes &s) const    	 									{ return std::get<Ta>(s);};
+			Ta attr(const MTypes &s) const    	 			{ return std::get<Ta>(s);};
 			
-			bool nodeExists(IDType id) const										{ return nodes.count(id) > 0;}
-			template<typename Ta>		
-			bool nodeHasAttrib(IDType id, const std::string &key, const std::string &value) const 
+			bool nodeExists(std::uint32_t id) const			{ return nodes.count(id) > 0;}
+			template<typename Ta>
+			bool nodeHasAttrib(std::uint32_t id, const std::string &key, const std::string &value) const 
 			{  
 				auto &ats = nodes.at(id).attrs;
 				return (ats.count(key) > 0) and (this->attr<Ta>(ats.at(key))==value);
 			};
-			std::vector<IDType> edgesByLabel(IDType id, const std::string &tag) 	
+			std::vector<std::uint32_t> edgesByLabel(std::uint32_t id, const std::string &tag) 	
 			{ 
-				std::vector<IDType> keys;
+				std::vector<std::uint32_t> keys;
 				for(auto &[k, v] : nodes.at(id).fanout)
 					if( attr<std::string>(v.attrs["name"]) == tag )
 						keys.push_back(k);
 				return keys;
     		};
-			IDType getNodeLevel(IDType id)  										{ return std::get<IDType>(this->attrs(id)["level"]); };
-        	IDType getParent(IDType id)   											{ return std::get<IDType>(this->attrs(id)["parent"]); };
 			
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// 													InnerModel API
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+			// ///////////////////////////////////////////////////
+			// /// Tree update methods
+			// ///////////////////////////////////////////////////
+			// void setRoot(InnerModelNode *node);
+			// void cleanupTables();
+			void updateTransformValues(const std::uint32_t &transformId, float tx, float ty, float tz, float rx, float ry, float rz, const std::uint32_t &parentId = 0);
+			void innerModelTreeWalk(std::uint32_t id);
+
+			// ////////////////////////////////////////////
+			// /// Transformation matrix retrieval methods
+			// ///////////////////////////////////////////
+			using ABLists = std::tuple< std::list<std::uint32_t>, std::list<std::uint32_t> >;
+
+			ABLists setLists(const std::uint32_t &origId, const std::uint32_t &destId);
+			RMat::RTMat getTransformationMatrix(const std::uint32_t &to, const std::uint32_t &from);
+			RMat::QVec transform(const std::uint32_t &destId, const QVec &initVec, const std::uint32_t &origId);
+			// RTMat getTransformationMatrix(const QString &destId, const QString &origId);
+			// RTMat getTransformationMatrixS(const std::string &destId, const std::string &origId);
+			// QMat getRotationMatrixTo(const QString &to, const QString &from);
+			// QVec getTranslationVectorTo(const QString &to, const QString &from);
+			// QVec rotationAngles(const QString & destId, const QString & origId);
 			
+			// ////////////////////////////////////////////
+			// /// Editing
+			// ///////////////////////////////////////////
+			// template <class N> N* getNode(const std::string &id) const
+			// void removeSubTree(InnerModelNode *item, QStringList *l);
+			// void removeNode(const QString & id);
+			// void moveSubTree(InnerModelNode *nodeSrc, InnerModelNode *nodeDst);
+			// void getSubTree(InnerModelNode *node, QStringList *l);
+			// void getSubTree(InnerModelNode *node, QList<InnerModelNode *> *l);
+			// void computeLevels(InnerModelNode *node);
+			// InnerModelNode *getRoot() { return root; }
+			// QString getParentIdentifier(QString id);
+			// std::string getParentIdentifierS(std::string id);
+			std::uint32_t getNodeLevel(std::uint32_t id)  	{ return std::get<std::uint32_t>(nodes.at(id).attrs["level"]); };
+			std::uint32_t getParent(std::uint32_t id)   	{ return std::get<std::uint32_t>(nodes.at(id).attrs["parent"]); };
+
+
+			// ////////////////////////////
+			// // FCL related
+			// ////////////////////////////
+			// bool collidable(const QString &a);
+			// bool collide(const QString &a, const QString &b);
+			// float distance(const QString &a, const QString &b);
+
+			// ////////////////////////////
+			// // Jacobians
+			// ////////////////////////////
+			// QMat jacobian(QStringList &listaJoints, const QVec &motores, const QString &endEffector);
 
 		private:
 			Nodes nodes;
+			// For InnerModel
 	};
 }
 #endif // GRAPH_H
@@ -192,7 +244,7 @@ namespace DSR
 
 //FUSCA
 	// template <typename Ta> 
-	// 		Ta attribFanin(IDType to, const std::string &tag) const 	
+	// 		Ta attribFanin(std::uint32_t to, const std::string &tag) const 	
 	// 		{ 	auto &fin = nodes.at(to).fanin;
 	// 			auto edge = std::find_if(fin.begin(), fin.end(), [to, tag, this](auto from){ return edgeAttrs(from, to).count(tag)>0;});
 	// 			if(edge != fin.end())
