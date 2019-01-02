@@ -31,12 +31,9 @@ template<class... Ts> overload(Ts...) -> overload<Ts...>;
 
 namespace DSR
 {
-<<<<<<< HEAD
-=======
 	using IDType = std::int32_t;
 	using IMType = QString;
 
->>>>>>> 64f3b8579ad159af780ea4976dce0b5ec9b909eb
 	using MTypes = std::variant<std::uint32_t, std::int32_t, float, std::string, std::vector<float>, RMat::RTMat>;		
 	using Attribs = std::unordered_map<std::string, MTypes>;
 	using DrawAttribs = std::unordered_map<std::string, std::any>;
@@ -182,34 +179,6 @@ namespace DSR
 						keys.push_back(k);
 				return keys;
     		};
-<<<<<<< HEAD
-			
-			///////////////////////////////////////////////////////////////////////////////////////////////////////////
-			// 													InnerModel API
-			///////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-			// ///////////////////////////////////////////////////
-			// /// Tree update methods
-			// ///////////////////////////////////////////////////
-			// void setRoot(InnerModelNode *node);
-			// void cleanupTables();
-			void updateTransformValues(const std::uint32_t &transformId, float tx, float ty, float tz, float rx, float ry, float rz, const std::uint32_t &parentId = 0);
-			void innerModelTreeWalk(std::uint32_t id);
-
-			// ////////////////////////////////////////////
-			// /// Transformation matrix retrieval methods
-			// ///////////////////////////////////////////
-			using ABLists = std::tuple< std::list<std::uint32_t>, std::list<std::uint32_t> >;
-
-			ABLists setLists(const std::uint32_t &origId, const std::uint32_t &destId);
-			RMat::RTMat getTransformationMatrix(const std::uint32_t &to, const std::uint32_t &from);
-			RMat::QVec transform(const std::uint32_t &destId, const QVec &initVec, const std::uint32_t &origId);
-			// RTMat getTransformationMatrix(const QString &destId, const QString &origId);
-			// RTMat getTransformationMatrixS(const std::string &destId, const std::string &origId);
-			// QMat getRotationMatrixTo(const QString &to, const QString &from);
-			// QVec getTranslationVectorTo(const QString &to, const QString &from);
-			// QVec rotationAngles(const QString & destId, const QString & origId);
-=======
 			std::int32_t getNodeLevel(IDType id)  									{ return std::get<IDType>(this->attrs(id)["level"]); };
         	IDType getParent(IDType id)   											{ return std::get<IDType>(this->attrs(id)["parent"]); };
 			IDType getNodeByInnerModelName(const std::string &key, const std::string &tag)
@@ -219,7 +188,6 @@ namespace DSR
 						return k;
 				return 0;
 			};
->>>>>>> 64f3b8579ad159af780ea4976dce0b5ec9b909eb
 			
 			// ////////////////////////////////////////////
 			// /// Editing

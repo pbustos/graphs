@@ -44,8 +44,6 @@ SpecificWorker::~SpecificWorker()
 
 bool SpecificWorker::setParams(RoboCompCommonBehavior::ParameterList params)
 {
-	//THE FOLLOWING IS JUST AN EXAMPLE
-	//To use innerModelPath parameter you should uncomment specificmonitor.cpp readConfig method content
 	try
 	{
 		RoboCompCommonBehavior::Parameter par = params.at("InnerModelPath");
@@ -303,7 +301,7 @@ void SpecificWorker::initialize(int period)
 	graph = std::make_shared<DSR::Graph>();
 	//initializeFromInnerModel(innerModel);
 	//initializeRandom();
-	initializeXML("initialModel_hybrid.xml");
+	initializeXML("/home/robocomp/robocomp/files/innermodel/simpleworld-hybrid.xml");
 	graph->print();
 	
 	std::cout << __FILE__ << __FUNCTION__ << " -- Initializing graphic graph" << std::endl;
@@ -319,11 +317,11 @@ void SpecificWorker::initialize(int period)
 	innerapi.innerModelTreeWalk("world");
 
 	std::cout << __FILE__ << __FUNCTION__ << " -- TESTS transform" << std::endl;
-	auto r = innerapi.transform("robot", QVec::zeros(3), "tableA");
+	auto r = innerapi.transform("base", QVec::zeros(3), "laser");
 	r.print("Target coordinates from 0, 0, 0");
 	
 	std::cout << __FILE__ << __FUNCTION__ << " -- TESTS updatetransformvalues " << std::endl;
-	innerapi.updateTransformValues("robot", 20, 30, 40, 50, 60, 70);
+	innerapi.updateTransformValues("base", 20, 30, 40, 50, 60, 70);
 
 	this->Period = 100;
 	timer.start(Period);  
